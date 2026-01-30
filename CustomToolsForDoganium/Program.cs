@@ -11,12 +11,11 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Automation;
 
-
 namespace CustomToolsForDoganium
 {
     internal static partial class Program
     {
-        // ===================== WIN32 =====================
+        // ===================== WIN32 API =====================
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
 
@@ -31,13 +30,28 @@ namespace CustomToolsForDoganium
 
         [DllImport("user32.dll")]
         private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
-        
+
+        // Pencere gizleme ve durum kontrolü için gerekli API'ler
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GetConsoleWindow();
+
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("user32.dll")]
+        private static extern bool IsIconic(IntPtr hWnd);
+
+        private const int SW_HIDE = 0;
+        private const int SW_RESTORE = 9;
+
         private static NotifyIcon _notifyIcon;
+        private static IntPtr _consoleWindow;
 
         // ===================== MAIN =====================
         [STAThread]
         private static void Main()
         {
+            _consoleWindow = GetConsoleWindow();
 
             if (!IsRunAsAdministrator())
             {
@@ -50,34 +64,46 @@ namespace CustomToolsForDoganium
 
                 var choice = Console.ReadLine();
 
-                if (choice == "1")
-                {
-                    Console.WriteLine("Yeniden başlatılıyor...");
-                    RestartAsAdministrator();
-                }
-                else
-                {
-                    Console.WriteLine("Uygulama kapatılıyor...");
-                }
+                if (choice != "1") return;
+                Console.WriteLine("Yeniden başlatılıyor...");
+                RestartAsAdministrator();
 
                 return;
             }
-            
+
             _notifyIcon = new NotifyIcon
             {
-                Icon = SystemIcons.Application,
+                Icon = SystemIcons.Shield,
                 Text = "Doganium Araçları",
                 Visible = true
             };
-            
+
+            _notifyIcon.DoubleClick += (s, e) => { ShowWindow(_consoleWindow, SW_RESTORE); };
+
+            _notifyIcon.ContextMenu = new ContextMenu(new[]
+            {
+                new MenuItem("Göster", (s, e) => ShowWindow(_consoleWindow, SW_RESTORE)),
+                new MenuItem("-"),
+                new MenuItem("Çıkış", (s, e) =>
+                {
+                    _notifyIcon.Visible = false;
+                    Environment.Exit(0);
+                })
+            });
+
             Console.WriteLine("✅ Yönetici yetkisiyle çalışıyor");
             Console.WriteLine("Ctrl + Shift + C : Erişilebilir metni yakala");
-            Console.WriteLine("Çıkmak için pencereyi kapat");
+            Console.WriteLine("💡 Pencereyi küçülttüğünde saat yanına (tray) gizlenecektir.");
 
             while (true)
             {
                 try
                 {
+                    if (IsIconic(_consoleWindow))
+                    {
+                        ShowWindow(_consoleWindow, SW_HIDE);
+                    }
+
                     if (IsHotkeyPressed())
                     {
                         CaptureText_SafeWindowsOnly();
@@ -89,7 +115,8 @@ namespace CustomToolsForDoganium
                     Console.WriteLine("Hata: " + ex.Message);
                 }
 
-                Thread.Sleep(200);
+                Application.DoEvents();
+                Thread.Sleep(100);
             }
         }
 
@@ -123,14 +150,11 @@ namespace CustomToolsForDoganium
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Hata: {ex.Message}");
-                Console.WriteLine("Lütfen uygulamayı manuel olarak yönetici olarak çalıştırın.");
-                Console.WriteLine("Çıkmak için bir tuşa basın...");
+                Console.WriteLine($"Hata: {ex.Message}");
                 Console.ReadKey();
             }
         }
 
-        // ===================== HOTKEY =====================
         private static bool IsHotkeyPressed()
         {
             return (GetAsyncKeyState(Keys.ControlKey) & 0x8000) != 0 &&
@@ -147,7 +171,7 @@ namespace CustomToolsForDoganium
 
             if (hwnd == IntPtr.Zero)
             {
-                Console.WriteLine("❌ Aktif pencere bulunamadı");
+                Console.WriteLine("Aktif pencere bulunamadı");
                 return;
             }
 
@@ -167,20 +191,22 @@ namespace CustomToolsForDoganium
 
                 if (!proc.ProcessName.ToLower().Contains("doganium"))
                 {
-                    Console.WriteLine("⚠️ Bu Doganium değil!");
+                    Tools.ShowNotifyWarning(_notifyIcon, "Bu Doganium değil!");
+
                     System.Media.SystemSounds.Hand.Play();
                     return;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ İşlem bilgisi alınamadı: {ex.Message}");
+                Console.WriteLine($"İşlem bilgisi alınamadı: {ex.Message}");
                 Console.WriteLine("(Muhtemelen yetki sorunu - uygulamayı yönetici olarak çalıştırın)");
                 System.Media.SystemSounds.Hand.Play();
                 return;
             }
 
-            Console.WriteLine("✅ Doganium yakalandı, metin çıkarılıyor...");
+            Console.WriteLine("Doganium yakalandı, metin çıkarılıyor...");
+            Tools.ShowNotifyInfo(_notifyIcon, "Doğanium penceresi yakalandı. Metin işleme başlatılıyor...");
 
             var uiText = ReadUiAutomationText(hwnd);
             if (!string.IsNullOrWhiteSpace(uiText))
@@ -206,81 +232,41 @@ namespace CustomToolsForDoganium
             try
             {
                 var lines = rawText.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-
                 var rowLines = lines.Where(line => line.Trim().StartsWith(";;", StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
-
-                if (rowLines.Count == 0)
-                    return null;
+                if (rowLines.Count == 0) return null;
 
                 var offers = new List<InsuranceOffer>();
-
                 foreach (var line in rowLines)
                 {
                     var parts = line.Split(';');
-
-                    if (parts.Length < 6)
-                        continue;
+                    if (parts.Length < 6) continue;
 
                     var companyName = parts[2].Trim();
-                    if (string.IsNullOrWhiteSpace(companyName))
-                        continue;
-
                     var priceStr = parts[4].Trim();
-                    if (string.IsNullOrWhiteSpace(priceStr))
-                        continue;
 
-                    if (priceStr.Contains(","))
-                    {
-                        priceStr = priceStr.Split(',')[0];
-                    }
-
-                    if (priceStr.Contains("."))
-                    {
-                        priceStr = priceStr.Split('.')[0];
-                    }
-
-                    if (!int.TryParse(priceStr, out var price))
-                        continue;
+                    priceStr = priceStr.Split(',')[0].Split('.')[0];
+                    if (!int.TryParse(priceStr, out var price)) continue;
 
                     var offerNumber = "";
-
                     if (parts.Length > 7)
                     {
                         var offerSection = parts[7].Trim();
-
                         var companyUpper = companyName.ToUpper();
-
-                        if (!string.IsNullOrWhiteSpace(offerSection) 
-                            && !companyUpper.Contains("HDI") 
-                            && !companyUpper.Contains("SOMPO") 
-                            && !companyUpper.Contains("HEPİYİ"))
+                        if (!string.IsNullOrWhiteSpace(offerSection) && !companyUpper.Contains("HDI") &&
+                            !companyUpper.Contains("SOMPO") && !companyUpper.Contains("HEPİYİ"))
                         {
                             var match = Regex.Match(offerSection, @"[\d/]+");
-                            if (match.Success)
-                            {
-                                offerNumber = match.Value.Trim();
-
-                                if (offerSection.StartsWith("Bilgi", StringComparison.OrdinalIgnoreCase) ||
-                                    offerSection.StartsWith("Hata", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    offerNumber += "?";
-                                }
-                            }
+                            if (match.Success) offerNumber = match.Value.Trim();
                         }
                     }
 
                     offers.Add(new InsuranceOffer
-                    {
-                        CompanyName = companyName.ToUpper(),
-                        Price = price,
-                        OfferNumber = offerNumber
-                    });
+                        { CompanyName = companyName.ToUpper(), Price = price, OfferNumber = offerNumber });
                 }
 
                 offers = offers.OrderBy(o => o.Price).ToList();
-
                 var result = new StringBuilder();
                 foreach (var offer in offers)
                 {
@@ -288,34 +274,28 @@ namespace CustomToolsForDoganium
                         ? $"{offer.Price} TL {offer.CompanyName}"
                         : $"{offer.Price} TL {offer.CompanyName} - {offer.OfferNumber}");
                 }
-                _notifyIcon.ShowBalloonTip(1000, "Metin Yakalandı", 
-                    "Doganium'dan metin başarıyla kopyalandı!", 
-                    ToolTipIcon.Info);
+                
+                Tools.ShowNotifyInfo(_notifyIcon,"Doganium'dan veriler kopyalandı!");
                 return result.ToString();
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine($"Metin işleme hatası: {ex.Message}");
                 return null;
             }
         }
 
-
-        // ===================== UI AUTOMATION =====================
         private static string ReadUiAutomationText(IntPtr hwnd)
         {
             try
             {
                 var root = AutomationElement.FromHandle(hwnd);
                 if (root == null) return null;
-
                 var sb = new StringBuilder();
                 WalkUiAutomation(root, sb, 0);
                 return sb.ToString();
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine($"UI Automation hatası: {ex.Message}");
                 return null;
             }
         }
@@ -324,29 +304,17 @@ namespace CustomToolsForDoganium
         {
             try
             {
-                // Çok derin gitmeyi önle
                 if (depth > 7) return;
-
-                if (!string.IsNullOrWhiteSpace(el.Current.Name))
-                    sb.AppendLine(el.Current.Name);
+                if (!string.IsNullOrWhiteSpace(el.Current.Name)) sb.AppendLine(el.Current.Name);
 
                 if (el.TryGetCurrentPattern(ValuePattern.Pattern, out var valuePattern))
-                {
-                    var value = ((ValuePattern)valuePattern).Current.Value;
-                    if (!string.IsNullOrWhiteSpace(value))
-                        sb.AppendLine(value);
-                }
+                    sb.AppendLine(((ValuePattern)valuePattern).Current.Value);
 
                 if (el.TryGetCurrentPattern(TextPattern.Pattern, out var textPattern))
-                {
-                    var text = ((TextPattern)textPattern).DocumentRange.GetText(-1);
-                    if (!string.IsNullOrWhiteSpace(text))
-                        sb.AppendLine(text);
-                }
+                    sb.AppendLine(((TextPattern)textPattern).DocumentRange.GetText(-1));
 
                 var children = el.FindAll(TreeScope.Children, Condition.TrueCondition);
-                foreach (AutomationElement c in children)
-                    WalkUiAutomation(c, sb, depth + 1);
+                foreach (AutomationElement c in children) WalkUiAutomation(c, sb, depth + 1);
             }
             catch
             {

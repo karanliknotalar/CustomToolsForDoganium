@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -9,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Automation;
+
 
 namespace CustomToolsForDoganium
 {
@@ -30,7 +32,7 @@ namespace CustomToolsForDoganium
         [DllImport("user32.dll")]
         private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
         
-        
+        private static NotifyIcon _notifyIcon;
 
         // ===================== MAIN =====================
         [STAThread]
@@ -60,6 +62,13 @@ namespace CustomToolsForDoganium
 
                 return;
             }
+            
+            _notifyIcon = new NotifyIcon
+            {
+                Icon = SystemIcons.Application,
+                Text = "Doganium Araçları",
+                Visible = true
+            };
             
             Console.WriteLine("✅ Yönetici yetkisiyle çalışıyor");
             Console.WriteLine("Ctrl + Shift + C : Erişilebilir metni yakala");
@@ -279,7 +288,9 @@ namespace CustomToolsForDoganium
                         ? $"{offer.Price} TL {offer.CompanyName}"
                         : $"{offer.Price} TL {offer.CompanyName} - {offer.OfferNumber}");
                 }
-
+                _notifyIcon.ShowBalloonTip(1000, "Metin Yakalandı", 
+                    "Doganium'dan metin başarıyla kopyalandı!", 
+                    ToolTipIcon.Info);
                 return result.ToString();
             }
             catch (Exception ex)

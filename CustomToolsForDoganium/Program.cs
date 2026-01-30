@@ -28,25 +28,15 @@ namespace CustomToolsForDoganium
         private static extern int GetWindowTextLength(IntPtr hWnd);
 
         [DllImport("user32.dll")]
-        private static extern bool EnumChildWindows(IntPtr hwndParent, EnumWindowProc lpEnumFunc, IntPtr lParam);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, StringBuilder lParam);
-
-        [DllImport("user32.dll")]
         private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
-
-        private delegate bool EnumWindowProc(IntPtr hWnd, IntPtr lParam);
-
-        private const uint WM_GETTEXT = 0x000D;
-        private const uint WM_GETTEXTLENGTH = 0x000E;
-
-        static StringBuilder capturedText = new StringBuilder();
+        
+        
 
         // ===================== MAIN =====================
         [STAThread]
         private static void Main()
         {
+
             if (!IsRunAsAdministrator())
             {
                 Console.WriteLine("⚠️  Yönetici yetkisi gerekli!");
@@ -70,7 +60,7 @@ namespace CustomToolsForDoganium
 
                 return;
             }
-
+            
             Console.WriteLine("✅ Yönetici yetkisiyle çalışıyor");
             Console.WriteLine("Ctrl + Shift + C : Erişilebilir metni yakala");
             Console.WriteLine("Çıkmak için pencereyi kapat");

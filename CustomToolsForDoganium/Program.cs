@@ -171,13 +171,20 @@ namespace CustomToolsForDoganium
 
             if (hwnd == IntPtr.Zero)
             {
-                Console.WriteLine("Aktif pencere bulunamadı");
+                Tools.ShowNotifyWarning(_notifyIcon, "Aktif pencere bulunamadı");
                 return;
             }
 
             var length = GetWindowTextLength(hwnd);
             var windowTitle = new StringBuilder(length + 1);
+
             GetWindowText(hwnd, windowTitle, windowTitle.Capacity);
+            
+            if (!windowTitle.ToString().Contains("Sorgulama Ekranı"))
+            {
+                Tools.ShowNotifyWarning(_notifyIcon, "Aktif pencere Dogaium sorgulama ekranı değil!");
+                return;
+            }
             Console.WriteLine($"Pencere Başlığı: '{windowTitle}'");
 
             GetWindowThreadProcessId(hwnd, out var processId);
@@ -191,21 +198,19 @@ namespace CustomToolsForDoganium
 
                 if (!proc.ProcessName.ToLower().Contains("doganium"))
                 {
-                    Tools.ShowNotifyWarning(_notifyIcon, "Bu Doganium değil!");
-
+                    Tools.ShowNotifyWarning(_notifyIcon, "Bu Doganium Sorgulama ekranı değil!");
                     System.Media.SystemSounds.Hand.Play();
                     return;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"İşlem bilgisi alınamadı: {ex.Message}");
-                Console.WriteLine("(Muhtemelen yetki sorunu - uygulamayı yönetici olarak çalıştırın)");
+                Tools.ShowNotifyWarning(_notifyIcon, $"İşlem bilgisi alınamadı: {ex.Message}" +
+                                                     $"\r\n(Muhtemelen yetki sorunu - uygulamayı yönetici olarak çalıştırın)");
                 System.Media.SystemSounds.Hand.Play();
                 return;
             }
 
-            Console.WriteLine("Doganium yakalandı, metin çıkarılıyor...");
             Tools.ShowNotifyInfo(_notifyIcon, "Doğanium penceresi yakalandı. Metin işleme başlatılıyor...");
 
             var uiText = ReadUiAutomationText(hwnd);
@@ -274,8 +279,8 @@ namespace CustomToolsForDoganium
                         ? $"{offer.Price} TL {offer.CompanyName}"
                         : $"{offer.Price} TL {offer.CompanyName} - {offer.OfferNumber}");
                 }
-                
-                Tools.ShowNotifyInfo(_notifyIcon,"Doganium'dan veriler kopyalandı!");
+
+                Tools.ShowNotifyInfo(_notifyIcon, "Doganium Sorgu ekranından veriler kopyalandı!");
                 return result.ToString();
             }
             catch

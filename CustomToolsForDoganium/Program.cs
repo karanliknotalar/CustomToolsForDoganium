@@ -179,12 +179,13 @@ namespace CustomToolsForDoganium
             var windowTitle = new StringBuilder(length + 1);
 
             GetWindowText(hwnd, windowTitle, windowTitle.Capacity);
-            
+
             if (!windowTitle.ToString().Contains("Sorgulama Ekranı"))
             {
                 Tools.ShowNotifyWarning(_notifyIcon, "Aktif pencere Dogaium sorgulama ekranı değil!");
                 return;
             }
+
             Console.WriteLine($"Pencere Başlığı: '{windowTitle}'");
 
             GetWindowThreadProcessId(hwnd, out var processId);
@@ -220,9 +221,8 @@ namespace CustomToolsForDoganium
                 Console.WriteLine($"Metin uzunluğu: {uiText.Length}");
 
                 var result = ProcessAndFormatText(uiText);
-                Clipboard.SetText(uiText);
+                // Clipboard.SetText(uiText);
                 Clipboard.SetText(result);
-                Console.WriteLine(result);
 
                 System.Media.SystemSounds.Asterisk.Play();
                 return;
@@ -243,10 +243,11 @@ namespace CustomToolsForDoganium
                 if (rowLines.Count == 0) return null;
 
                 var offers = new List<InsuranceOffer>();
+                var counter = 0;
                 foreach (var line in rowLines)
                 {
                     var parts = line.Split(';');
-                    if (parts.Length < 6) continue;
+                    if (parts.Length < 7) continue;
 
                     var companyName = parts[2].Trim();
                     var priceStr = parts[4].Trim();
@@ -255,20 +256,29 @@ namespace CustomToolsForDoganium
                     if (!int.TryParse(priceStr, out var price)) continue;
 
                     var offerNumber = "";
-                    if (parts.Length > 7)
+                    var offerSection = parts[7].Trim();
+                    var companyUpper = companyName.ToUpper();
+                    
+                    if (!string.IsNullOrWhiteSpace(offerSection) && !companyUpper.Contains("HDI") &&
+                        !companyUpper.Contains("SOMPO") && !companyUpper.Contains("HEPİYİ") && counter < 3)
                     {
-                        var offerSection = parts[7].Trim();
-                        var companyUpper = companyName.ToUpper();
-                        if (!string.IsNullOrWhiteSpace(offerSection) && !companyUpper.Contains("HDI") &&
-                            !companyUpper.Contains("SOMPO") && !companyUpper.Contains("HEPİYİ"))
-                        {
-                            var match = Regex.Match(offerSection, @"[\d/]+");
-                            if (match.Success) offerNumber = match.Value.Trim();
-                        }
+                        var match = Regex.Match(offerSection, @"[\d/]+");
+                        if (match.Success) offerNumber = match.Value.Trim();
+                    }
+
+                    if (offerSection.Contains("Bilgi") || offerSection.Contains("Hata"))
+                    {
+                        companyName += " (?)";
                     }
 
                     offers.Add(new InsuranceOffer
-                        { CompanyName = companyName.ToUpper(), Price = price, OfferNumber = offerNumber });
+                        {
+                            CompanyName = companyName.ToUpper(),
+                            Price = price,
+                            OfferNumber = offerNumber
+                        }
+                    );
+                    counter++;
                 }
 
                 offers = offers.OrderBy(o => o.Price).ToList();

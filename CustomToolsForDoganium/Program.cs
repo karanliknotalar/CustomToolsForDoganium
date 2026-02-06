@@ -234,69 +234,119 @@ namespace CustomToolsForDoganium
 
         private static string ProcessAndFormatText(string rawText)
         {
-            try
+            var result = new StringBuilder();
+            var lines = rawText.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (rawText.Contains("Yeniden Sorgula"))
             {
-                var lines = rawText.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                var rowLines = lines.Where(line => line.Trim().StartsWith(";;", StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-
-                if (rowLines.Count == 0) return null;
-
-                var offers = new List<InsuranceOffer>();
-                var counter = 0;
-                foreach (var line in rowLines)
+                try
                 {
-                    var parts = line.Split(';');
-                    if (parts.Length < 7) continue;
+                    var rowLines = lines.Where(line => line.Trim().StartsWith(";;", StringComparison.OrdinalIgnoreCase))
+                        .ToList();
 
-                    var companyName = parts[2].Trim();
-                    var priceStr = parts[4].Trim();
+                    if (rowLines.Count == 0) return null;
 
-                    priceStr = priceStr.Split(',')[0].Split('.')[0];
-                    if (!int.TryParse(priceStr, out var price)) continue;
-
-                    var offerNumber = "";
-                    var offerSection = parts[7].Trim();
-                    var companyUpper = companyName.ToUpper();
-                    
-                    if (!string.IsNullOrWhiteSpace(offerSection) && !companyUpper.Contains("HDI") &&
-                        !companyUpper.Contains("SOMPO") && !companyUpper.Contains("HEPİYİ") && counter < 3)
+                    var offers = new List<InsuranceOffer>();
+                    var counter = 0;
+                    foreach (var line in rowLines)
                     {
-                        var match = Regex.Match(offerSection, @"[\d/]+");
-                        if (match.Success) offerNumber = match.Value.Trim();
-                    }
+                        var parts = line.Split(';');
+                        if (parts.Length < 7) continue;
 
-                    if (offerSection.Contains("Bilgi") || offerSection.Contains("Hata"))
-                    {
-                        companyName += " (?)";
-                    }
+                        var companyName = parts[2].Trim();
+                        var priceStr = parts[4].Trim();
 
-                    offers.Add(new InsuranceOffer
+                        priceStr = priceStr.Split(',')[0].Split('.')[0];
+                        if (!int.TryParse(priceStr, out var price)) continue;
+
+                        var offerNumber = "";
+                        var offerSection = parts[7].Trim();
+                        var companyUpper = companyName.ToUpper();
+
+                        if (!string.IsNullOrWhiteSpace(offerSection) && !companyUpper.Contains("HDI") &&
+                            !companyUpper.Contains("SOMPO") && !companyUpper.Contains("HEPİYİ") && counter < 3)
                         {
-                            CompanyName = companyName.ToUpper(),
-                            Price = price,
-                            OfferNumber = offerNumber
+                            var match = Regex.Match(offerSection, @"[\d/]+");
+                            if (match.Success) offerNumber = match.Value.Trim();
                         }
-                    );
-                    counter++;
-                }
 
-                offers = offers.OrderBy(o => o.Price).ToList();
-                var result = new StringBuilder();
-                foreach (var offer in offers)
+                        if (offerSection.Contains("Bilgi") || offerSection.Contains("Hata"))
+                        {
+                            companyName += " (?)";
+                        }
+
+                        offers.Add(new InsuranceOffer
+                            {
+                                CompanyName = companyName.ToUpper(),
+                                Price = price,
+                                OfferNumber = offerNumber
+                            }
+                        );
+                        counter++;
+                    }
+
+                    offers = offers.OrderBy(o => o.Price).ToList();
+
+                    foreach (var offer in offers)
+                    {
+                        result.AppendLine(string.IsNullOrWhiteSpace(offer.OfferNumber)
+                            ? $"{offer.Price} TL {offer.CompanyName}"
+                            : $"{offer.Price} TL {offer.CompanyName} - {offer.OfferNumber}");
+                    }
+
+                    Tools.ShowNotifyInfo(_notifyIcon, "Doganium Sorgu ekranından veriler kopyalandı!");
+                }
+                catch
                 {
-                    result.AppendLine(string.IsNullOrWhiteSpace(offer.OfferNumber)
-                        ? $"{offer.Price} TL {offer.CompanyName}"
-                        : $"{offer.Price} TL {offer.CompanyName} - {offer.OfferNumber}");
+                    return null;
                 }
-
-                Tools.ShowNotifyInfo(_notifyIcon, "Doganium Sorgu ekranından veriler kopyalandı!");
-                return result.ToString();
             }
-            catch
+            else if (rawText.Contains("Genel Bilgiler"))
             {
-                return null;
+                try
+                {
+                    if (lines.Length == 0) return null;
+
+                    var vehicleGroupName = Tools.GetVehicleGroupName(Tools.GetNextValue(lines, "groupControl3"));
+                    var vehicleBrandCode = Tools.GetBeforeValue(lines, "Yakıt Tipi").Split(' ').First();
+                    var vehicleTypeCode = Tools.GetNextValue(lines, "Tip Kodu").Split(' ').First();
+                    var vehicleModelYear = Tools.GetNextValue(lines, "Model Yılı");
+                    var documentSeries = Tools.GetNextValue(lines, "Plaka");
+                    var birthDate = Tools.GetDate(Tools.GetBeforeValue(lines, "TC / Vergi No"));
+                    var identifyNo = Tools.GetNextValue(lines, "TC / Vergi No");
+                    var plate = Tools.GetBeforeValue(lines, "Plakanın Son Sorgusunu Getir");
+                    var customerName = Tools.GetToTitleCase(Tools.GetBeforeValue(lines, "gcInsuranceInformation"));
+
+                    result.AppendLine(customerName);
+
+                    switch (identifyNo.Length)
+                    {
+                        case 11:
+                            result.AppendLine($"TC: {identifyNo}")
+                                .AppendLine($"DT: {birthDate}");
+                            break;
+                        case 10:
+                            result.AppendLine($"Vergi: {identifyNo}");
+                            break;
+                    }
+
+                    result.AppendLine($"Plaka: {plate}")
+                        .AppendLine($"Seri: {documentSeries}")
+                        .AppendLine($"{vehicleGroupName} - {vehicleModelYear} Model")
+                        .AppendLine($"{vehicleBrandCode}{vehicleTypeCode}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    return null;
+                }
             }
+            else
+            {
+                Tools.ShowNotifyWarning(_notifyIcon, "Aktif Doğanium sekmesi müşteri bilgi veya sorgu ekranı değil!");
+            }
+
+            return result.ToString();
         }
 
         private static string ReadUiAutomationText(IntPtr hwnd)

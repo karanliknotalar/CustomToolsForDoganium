@@ -335,7 +335,7 @@ namespace CustomToolsForDoganium
                         .AppendLine($"{vehicleGroupName} - {vehicleModelYear} Model")
                         .AppendLine($"{vehicleBrandCode}{vehicleTypeCode}");
                     
-                    Tools.ShowNotifyInfo(_notifyIcon, "Doganium Sorgu ekranından veriler kopyalandı!");
+                    Tools.ShowNotifyInfo(_notifyIcon, "Doganium müşteri ve araç bilgileri ekranından veriler kopyalandı!");
                 }
                 catch (Exception ex)
                 {

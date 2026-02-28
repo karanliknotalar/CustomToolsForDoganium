@@ -94,7 +94,9 @@ namespace CustomToolsForDoganium
             Console.WriteLine("✅ Yönetici yetkisiyle çalışıyor");
             Console.WriteLine("Ctrl + Shift + C : Erişilebilir metni yakala");
             Console.WriteLine("💡 Pencereyi küçülttüğünde saat yanına (tray) gizlenecektir.");
-
+            
+            ForExel.Start();
+            
             while (true)
             {
                 try

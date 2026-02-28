@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -13,7 +12,7 @@ namespace CustomToolsForDoganium
         private static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll")]
-        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+        private static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
 
         private static Thread _workerThread;
         private static volatile bool _isRunning;
@@ -37,7 +36,7 @@ namespace CustomToolsForDoganium
                         Console.Error.WriteLine("Error while trying to get clipboard");
                     }
 
-                    Thread.Sleep(100);
+                    Thread.Sleep(1000);
                 }
             });
 
@@ -55,66 +54,68 @@ namespace CustomToolsForDoganium
         {
             var hWnd = GetForegroundWindow();
             if (hWnd == IntPtr.Zero) return false;
-
-            GetWindowThreadProcessId(hWnd, out var processId);
-
-            try
-            {
-                var p = Process.GetProcessById((int)processId);
-                return p.ProcessName.ToUpper() == "EXCEL";
-            }
-            catch
-            {
-                return false;
-            }
+            var sb = new StringBuilder(256);
+            return GetWindowText(hWnd, sb, 256) > 0 && sb.ToString().Contains("Excel");
         }
 
-
+        private static string _lastProcessedText = "";
         private static void CheckAndConvertClipboard()
         {
+            if (!IsExcelActive()) return;
             var rawText = GetClipboardText();
-            if (string.IsNullOrEmpty(rawText)) return;
+            if (string.IsNullOrEmpty(rawText) || rawText == _lastProcessedText) return;
             if (!rawText.Contains("TC:") && !rawText.Contains("Vergi:")) return;
 
             var formattedText = ParseAndFormat(rawText);
             if (string.IsNullOrEmpty(formattedText)) return;
 
+            _lastProcessedText = formattedText;
+            
             SetClipboardText(formattedText);
 
             Console.WriteLine("[EXEL] Kopyalanan veri exel formatına uyarlandı.");
             Console.WriteLine($"[EXEL] Uyarlanan Veri: {formattedText}");
         }
 
+        
+        [DllImport("user32.dll")]
+        private static extern bool OpenClipboard(IntPtr hWndNewOwner);
+
+        [DllImport("user32.dll")]
+        private static extern bool CloseClipboard();
+
+        private static bool IsClipboardBusy()
+        {
+            if (!OpenClipboard(IntPtr.Zero))
+                return true;
+
+            CloseClipboard();
+            return false;
+        }
+        
         private static string GetClipboardText()
         {
-            for (var i = 0; i < 3; i++)
+            try
             {
-                try
-                {
-                    return Clipboard.GetText();
-                }
-                catch
-                {
-                    Thread.Sleep(100);
-                }
+                return Clipboard.GetText();
             }
-
-            return null;
+            catch (Exception e)
+            {
+                Console.WriteLine("[EXEL] PANO OKUMA HATASI: " + e.Message + e);
+                return null;
+            }
         }
 
         private static void SetClipboardText(string text)
         {
-            for (var i = 0; i < 3; i++)
+            if (!IsExcelActive()) return;
+            try
             {
-                try
-                {
-                    Clipboard.SetText(text);
-                    return;
-                }
-                catch
-                {
-                    Thread.Sleep(100);
-                }
+                Clipboard.SetText(text);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("[EXEL] PANO YAZMA HATASI:" + e.Message);
             }
         }
 
@@ -166,9 +167,9 @@ namespace CustomToolsForDoganium
 
                 return sb.ToString();
             }
-            catch
+            catch (Exception e)
             {
-                Console.WriteLine("Hatalı işlem");
+                Console.WriteLine("[EXEL]  Hatalı işlem: " + e.Message);
                 return null;
             }
         }

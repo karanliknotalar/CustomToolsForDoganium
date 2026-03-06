@@ -78,6 +78,7 @@ namespace CustomToolsForDoganium
             
             SetClipboardText(formattedText);
 
+            Console.WriteLine();
             Console.WriteLine("[EXEL] Kopyalanan veri exel formatına uyarlandı.");
             Console.WriteLine($"[EXEL] Uyarlanan Veri: {formattedText}");
         }

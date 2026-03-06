@@ -58,26 +58,27 @@ namespace CustomToolsForDoganium
             return GetWindowText(hWnd, sb, 256) > 0 && sb.ToString().Contains("Excel");
         }
 
-        private static string _lastProcessedText = "";
+        private static string _lastProcessedRaw = "";
+
         private static void CheckAndConvertClipboard()
         {
             if (!IsExcelActive()) return;
             var rawText = GetClipboardText();
-            if (string.IsNullOrEmpty(rawText) || rawText == _lastProcessedText) return;
+            if (string.IsNullOrEmpty(rawText) || rawText == _lastProcessedRaw) return;
             if (!rawText.Contains("TC:") && !rawText.Contains("Vergi:")) return;
 
             var formattedText = ParseAndFormat(rawText);
             if (string.IsNullOrEmpty(formattedText)) return;
 
-            _lastProcessedText = formattedText;
-            
+            _lastProcessedRaw = rawText;
+
             SetClipboardText(formattedText);
 
             Console.WriteLine("[EXEL] Kopyalanan veri exel formatına uyarlandı.");
             Console.WriteLine($"[EXEL] Uyarlanan Veri: {formattedText}");
         }
 
-        
+
         [DllImport("user32.dll")]
         private static extern bool OpenClipboard(IntPtr hWndNewOwner);
 
@@ -92,7 +93,7 @@ namespace CustomToolsForDoganium
             CloseClipboard();
             return false;
         }
-        
+
         private static string GetClipboardText()
         {
             try

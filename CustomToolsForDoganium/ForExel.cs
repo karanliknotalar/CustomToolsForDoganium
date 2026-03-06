@@ -63,15 +63,19 @@ namespace CustomToolsForDoganium
         private static void CheckAndConvertClipboard()
         {
             if (!IsExcelActive()) return;
+            
             var rawText = GetClipboardText();
+            
             if (string.IsNullOrEmpty(rawText) || rawText == _lastProcessedRaw) return;
+            
+            _lastProcessedRaw = rawText;
+            
             if (!rawText.Contains("TC:") && !rawText.Contains("Vergi:")) return;
 
             var formattedText = ParseAndFormat(rawText);
+            
             if (string.IsNullOrEmpty(formattedText)) return;
-
-            _lastProcessedRaw = rawText;
-
+            
             SetClipboardText(formattedText);
 
             Console.WriteLine("[EXEL] Kopyalanan veri exel formatına uyarlandı.");

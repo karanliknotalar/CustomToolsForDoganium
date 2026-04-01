@@ -94,9 +94,9 @@ namespace CustomToolsForDoganium
             Console.WriteLine("✅ Yönetici yetkisiyle çalışıyor");
             Console.WriteLine("Ctrl + Shift + C : Erişilebilir metni yakala");
             Console.WriteLine("💡 Pencereyi küçülttüğünde saat yanına (tray) gizlenecektir.");
-            
+
             ForExel.Start();
-            
+
             while (true)
             {
                 try
@@ -157,11 +157,46 @@ namespace CustomToolsForDoganium
             }
         }
 
+        private enum InsureType
+        {
+            None = 0,
+            Trafik = 4,
+            Kasko = 5,
+            Imm = 6
+        }
+        
+        private static InsureType _selectedInsure = InsureType.None;
+        
         private static bool IsHotkeyPressed()
         {
-            return (GetAsyncKeyState(Keys.ControlKey) & 0x8000) != 0 &&
-                   (GetAsyncKeyState(Keys.ShiftKey) & 0x8000) != 0 &&
-                   (GetAsyncKeyState(Keys.C) & 0x8000) != 0;
+            var result = false;
+
+            if ((GetAsyncKeyState(Keys.ControlKey) & 0x8000) != 0 &&
+                (GetAsyncKeyState(Keys.ShiftKey) & 0x8000) != 0 &&
+                (GetAsyncKeyState(Keys.C) & 0x8000) != 0)
+            {
+                _selectedInsure = InsureType.Trafik;
+                result = true;
+            }
+
+            if ((GetAsyncKeyState(Keys.ControlKey) & 0x8000) != 0 &&
+                (GetAsyncKeyState(Keys.ShiftKey) & 0x8000) != 0 &&
+                (GetAsyncKeyState(Keys.X) & 0x8000) != 0)
+            {
+                _selectedInsure = InsureType.Kasko;
+                result = true;
+            }
+            
+            
+            if ((GetAsyncKeyState(Keys.ControlKey) & 0x8000) != 0 &&
+                (GetAsyncKeyState(Keys.ShiftKey) & 0x8000) != 0 &&
+                (GetAsyncKeyState(Keys.Z) & 0x8000) != 0)
+            {
+                _selectedInsure = InsureType.Imm;
+                result = true;
+            }
+
+            return result;
         }
 
         // ===================== SMART CAPTURE =====================
@@ -256,19 +291,22 @@ namespace CustomToolsForDoganium
                         if (parts.Length < 7) continue;
 
                         var companyName = parts[2].Trim();
-                        var priceStr = parts[4].Trim();
+                        var priceStr = parts[(int)_selectedInsure].Trim();
 
                         priceStr = priceStr.Split(',')[0].Split('.')[0];
                         if (!int.TryParse(priceStr, out var price)) continue;
 
                         var offerNumber = "";
-                        var offerSection = parts[7].Trim();
+                        var offerSection = parts[(int)_selectedInsure + 3].Trim();
                         var companyUpper = companyName.ToUpper();
 
+                        Console.WriteLine("Offer Section: " + offerSection);
+                        
                         if (!string.IsNullOrWhiteSpace(offerSection) && !companyUpper.Contains("HDI") &&
-                            !companyUpper.Contains("SOMPO") && !companyUpper.Contains("HEPİYİ") && counter < 3)
+                            !companyUpper.Contains("SOMPO") && !companyUpper.Contains("HEPİYİ") &&
+                            !companyUpper.Contains("AXA") && counter < 3)
                         {
-                            var match = Regex.Match(offerSection, @"[\d/]+");
+                            var match = Regex.Match(offerSection, @"[\d/]{7,}");
                             if (match.Success) offerNumber = match.Value.Trim();
                         }
 
@@ -336,8 +374,9 @@ namespace CustomToolsForDoganium
                         .AppendLine($"Seri: {documentSeries}")
                         .AppendLine($"{vehicleGroupName} - {vehicleModelYear} Model")
                         .AppendLine($"{vehicleBrandCode}{vehicleTypeCode}");
-                    
-                    Tools.ShowNotifyInfo(_notifyIcon, "Doganium müşteri ve araç bilgileri ekranından veriler kopyalandı!");
+
+                    Tools.ShowNotifyInfo(_notifyIcon,
+                        "Doganium müşteri ve araç bilgileri ekranından veriler kopyalandı!");
                 }
                 catch (Exception ex)
                 {

@@ -300,11 +300,11 @@ namespace CustomToolsForDoganium
                         var offerSection = parts[(int)_selectedInsure + 3].Trim();
                         var companyUpper = companyName.ToUpper();
 
-                        Console.WriteLine("Offer Section: " + offerSection);
+                        // Console.WriteLine("Offer Section: " + offerSection);
                         
                         if (!string.IsNullOrWhiteSpace(offerSection) && !companyUpper.Contains("HDI") &&
                             !companyUpper.Contains("SOMPO") && !companyUpper.Contains("HEPİYİ") &&
-                            !companyUpper.Contains("AXA") && counter < 3)
+                            !companyUpper.Contains("AXA") && counter < 6)
                         {
                             var match = Regex.Match(offerSection, @"[\d/]{7,}");
                             if (match.Success) offerNumber = match.Value.Trim();

@@ -164,9 +164,9 @@ namespace CustomToolsForDoganium
             Kasko = 5,
             Imm = 6
         }
-        
+
         private static InsureType _selectedInsure = InsureType.None;
-        
+
         private static bool IsHotkeyPressed()
         {
             var result = false;
@@ -186,8 +186,8 @@ namespace CustomToolsForDoganium
                 _selectedInsure = InsureType.Kasko;
                 result = true;
             }
-            
-            
+
+
             if ((GetAsyncKeyState(Keys.ControlKey) & 0x8000) != 0 &&
                 (GetAsyncKeyState(Keys.ShiftKey) & 0x8000) != 0 &&
                 (GetAsyncKeyState(Keys.Z) & 0x8000) != 0)
@@ -301,7 +301,7 @@ namespace CustomToolsForDoganium
                         var companyUpper = companyName.ToUpper();
 
                         // Console.WriteLine("Offer Section: " + offerSection);
-                        
+
                         if (!string.IsNullOrWhiteSpace(offerSection) && !companyUpper.Contains("HDI") &&
                             !companyUpper.Contains("SOMPO") && !companyUpper.Contains("HEPİYİ") &&
                             !companyUpper.Contains("AXA") && counter < 6)
@@ -347,11 +347,25 @@ namespace CustomToolsForDoganium
                 {
                     if (lines.Length == 0) return null;
 
-                    var vehicleGroupName = Tools.GetVehicleGroupName(Tools.GetNextValue(lines, "groupControl3"));
+                    // foreach (var line in lines)
+                    // {
+                    //     Console.WriteLine(line);
+                    // }
+
+                    var motorNo = "";
+                    var chassisNo = "";
+                    var vehicleGroupName = Tools.GetVehicleGroupName(Tools.GetBeforeValue(lines, "Kasko Değeri"));
                     var vehicleBrandCode = Tools.GetBeforeValue(lines, "Yakıt Tipi").Split(' ').First();
                     var vehicleTypeCode = Tools.GetNextValue(lines, "Tip Kodu").Split(' ').First();
                     var vehicleModelYear = Tools.GetNextValue(lines, "Model Yılı");
                     var documentSeries = Tools.GetNextValue(lines, "Plaka");
+                    if (!Regex.IsMatch(documentSeries, @"^[A-Za-z]{1,2}\d{6}$"))
+                    {
+                        documentSeries = "";
+                        motorNo = Tools.GetBeforeValue(lines, "Tescil Tarihi");
+                        chassisNo = Tools.GetNextValue(lines, "Şasi No");
+                    }
+
                     var birthDate = Tools.GetDate(Tools.GetBeforeValue(lines, "TC / Vergi No"));
                     var identifyNo = Tools.GetNextValue(lines, "TC / Vergi No");
                     var plate = Tools.GetBeforeValue(lines, "Plakanın Son Sorgusunu Getir");
@@ -371,8 +385,15 @@ namespace CustomToolsForDoganium
                     }
 
                     result.AppendLine($"Plaka: {plate}")
-                        .AppendLine($"Seri: {documentSeries}")
-                        .AppendLine($"{vehicleGroupName} - {vehicleModelYear} Model")
+                        .AppendLine($"Seri: {documentSeries}");
+
+                    if (string.IsNullOrEmpty(documentSeries))
+                    {
+                        result.AppendLine($"Motor: {motorNo}")
+                            .AppendLine($"Şasi: {chassisNo}");
+                    }
+
+                    result.AppendLine($"{vehicleGroupName} - {vehicleModelYear} Model")
                         .AppendLine($"{vehicleBrandCode}{vehicleTypeCode}");
 
                     Tools.ShowNotifyInfo(_notifyIcon,

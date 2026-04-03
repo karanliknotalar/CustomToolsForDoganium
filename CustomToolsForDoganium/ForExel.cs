@@ -82,23 +82,7 @@ namespace CustomToolsForDoganium
             Console.WriteLine("[EXEL] Kopyalanan veri exel formatına uyarlandı.");
             Console.WriteLine($"[EXEL] Uyarlanan Veri: {formattedText}");
         }
-
-
-        [DllImport("user32.dll")]
-        private static extern bool OpenClipboard(IntPtr hWndNewOwner);
-
-        [DllImport("user32.dll")]
-        private static extern bool CloseClipboard();
-
-        private static bool IsClipboardBusy()
-        {
-            if (!OpenClipboard(IntPtr.Zero))
-                return true;
-
-            CloseClipboard();
-            return false;
-        }
-
+        
         private static string GetClipboardText()
         {
             try

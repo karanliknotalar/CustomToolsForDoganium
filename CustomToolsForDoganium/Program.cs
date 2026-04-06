@@ -80,8 +80,7 @@ namespace CustomToolsForDoganium
 
             _notifyIcon.DoubleClick += (s, e) => { ShowWindow(_consoleWindow, SW_RESTORE); };
 
-            _notifyIcon.ContextMenu = new ContextMenu(new[]
-            {
+            _notifyIcon.ContextMenu = new ContextMenu([
                 new MenuItem("Göster", (s, e) => ShowWindow(_consoleWindow, SW_RESTORE)),
                 new MenuItem("-"),
                 new MenuItem("Çıkış", (s, e) =>
@@ -89,12 +88,12 @@ namespace CustomToolsForDoganium
                     _notifyIcon.Visible = false;
                     Environment.Exit(0);
                 })
-            });
+            ]);
 
             Console.WriteLine("✅ Yönetici yetkisiyle çalışıyor");
             Console.WriteLine("Ctrl + Shift + C : Erişilebilir metni yakala");
             Console.WriteLine("💡 Pencereyi küçülttüğünde saat yanına (tray) gizlenecektir.");
-
+            Tools.EnsureNotificationsEnabled();
             ForExel.Start();
 
             while (true)
@@ -119,6 +118,7 @@ namespace CustomToolsForDoganium
                 {
                     Console.WriteLine("Error: " + ex.Message);
                     Console.WriteLine("Stack Trace: " + ex.StackTrace);
+                    Tools.ShowNotifyWarning(_notifyIcon, "TEKRAR DENE! UYGULAMA EKRANI YAKALARKEN BİR HATA OLUŞTU.");
                 }
             }
         }

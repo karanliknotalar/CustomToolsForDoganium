@@ -72,5 +72,22 @@ namespace CustomToolsForDoganium
 
             return null;
         }
+        
+        public static void EnsureNotificationsEnabled()
+        {
+            try
+            {
+                var appName = Application.ExecutablePath;
+                var regPath = $@"SOFTWARE\Microsoft\Windows\CurrentVersion\Notifications\Settings\{appName}";
+
+                using var key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(regPath);
+                key?.SetValue("Enabled", 1, Microsoft.Win32.RegistryValueKind.DWord);
+                key?.SetValue("ShowInActionCenter", 0, Microsoft.Win32.RegistryValueKind.DWord);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Bildirim ayarı yapılamadı: " + ex.Message);
+            }
+        }
     }
 }

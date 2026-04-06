@@ -8,7 +8,6 @@ using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Automation;
 
@@ -52,55 +51,55 @@ namespace CustomToolsForDoganium
         [STAThread]
         private static void Main()
         {
-            try
+            _consoleWindow = GetConsoleWindow();
+
+            if (!IsRunAsAdministrator())
             {
-                _consoleWindow = GetConsoleWindow();
+                Console.WriteLine("⚠️  Yönetici yetkisi gerekli!");
+                Console.WriteLine();
+                Console.WriteLine("[1] Otomatik olarak yönetici yetkisiyle yeniden başlat");
+                Console.WriteLine("[2] Çıkış (manuel olarak yönetici yetkisiyle çalıştırın)");
+                Console.WriteLine();
+                Console.Write("Seçiminiz (1/2): ");
 
-                if (!IsRunAsAdministrator())
+                var choice = Console.ReadLine();
+
+                if (choice != "1") return;
+                Console.WriteLine("Yeniden başlatılıyor...");
+                RestartAsAdministrator();
+
+                return;
+            }
+
+            _notifyIcon = new NotifyIcon
+            {
+                Icon = SystemIcons.Shield,
+                Text = "Doganium Araçları",
+                Visible = true
+            };
+
+            _notifyIcon.DoubleClick += (s, e) => { ShowWindow(_consoleWindow, SW_RESTORE); };
+
+            _notifyIcon.ContextMenu = new ContextMenu(new[]
+            {
+                new MenuItem("Göster", (s, e) => ShowWindow(_consoleWindow, SW_RESTORE)),
+                new MenuItem("-"),
+                new MenuItem("Çıkış", (s, e) =>
                 {
-                    Console.WriteLine("⚠️  Yönetici yetkisi gerekli!");
-                    Console.WriteLine();
-                    Console.WriteLine("[1] Otomatik olarak yönetici yetkisiyle yeniden başlat");
-                    Console.WriteLine("[2] Çıkış (manuel olarak yönetici yetkisiyle çalıştırın)");
-                    Console.WriteLine();
-                    Console.Write("Seçiminiz (1/2): ");
+                    _notifyIcon.Visible = false;
+                    Environment.Exit(0);
+                })
+            });
 
-                    var choice = Console.ReadLine();
+            Console.WriteLine("✅ Yönetici yetkisiyle çalışıyor");
+            Console.WriteLine("Ctrl + Shift + C : Erişilebilir metni yakala");
+            Console.WriteLine("💡 Pencereyi küçülttüğünde saat yanına (tray) gizlenecektir.");
 
-                    if (choice != "1") return;
-                    Console.WriteLine("Yeniden başlatılıyor...");
-                    RestartAsAdministrator();
+            ForExel.Start();
 
-                    return;
-                }
-
-                _notifyIcon = new NotifyIcon
-                {
-                    Icon = SystemIcons.Shield,
-                    Text = "Doganium Araçları",
-                    Visible = true
-                };
-
-                _notifyIcon.DoubleClick += (s, e) => { ShowWindow(_consoleWindow, SW_RESTORE); };
-
-                _notifyIcon.ContextMenu = new ContextMenu(new[]
-                {
-                    new MenuItem("Göster", (s, e) => ShowWindow(_consoleWindow, SW_RESTORE)),
-                    new MenuItem("-"),
-                    new MenuItem("Çıkış", (s, e) =>
-                    {
-                        _notifyIcon.Visible = false;
-                        Environment.Exit(0);
-                    })
-                });
-
-                Console.WriteLine("✅ Yönetici yetkisiyle çalışıyor");
-                Console.WriteLine("Ctrl + Shift + C : Erişilebilir metni yakala");
-                Console.WriteLine("💡 Pencereyi küçülttüğünde saat yanına (tray) gizlenecektir.");
-
-                ForExel.Start();
-
-                while (true)
+            while (true)
+            {
+                try
                 {
                     if (IsIconic(_consoleWindow))
                     {
@@ -116,11 +115,11 @@ namespace CustomToolsForDoganium
                     Application.DoEvents();
                     Thread.Sleep(100);
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error: " + ex.Message);
-                Console.WriteLine("Stack Trace: " + ex.StackTrace);
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error: " + ex.Message);
+                    Console.WriteLine("Stack Trace: " + ex.StackTrace);
+                }
             }
         }
 
@@ -276,7 +275,7 @@ namespace CustomToolsForDoganium
                     var index = (int)_selectedInsure + 3;
                     var offerSection = (index < parts.Length ? parts[index] : null)?.Trim() ?? string.Empty;
                     var companyUpper = companyName.ToUpper();
-                    
+
                     if (!string.IsNullOrWhiteSpace(offerSection) && !companyUpper.Contains("HDI") &&
                         !companyUpper.Contains("SOMPO") && !companyUpper.Contains("HEPİYİ") &&
                         !companyUpper.Contains("AXA") && counter < 6)
@@ -314,7 +313,7 @@ namespace CustomToolsForDoganium
             else if (rawText.Contains("Genel Bilgiler"))
             {
                 if (lines.Length == 0) return null;
-                
+
                 var motorNo = "";
                 var chassisNo = "";
                 var vehicleGroupName = Tools.GetVehicleGroupName(Tools.GetBeforeValue(lines, "Kasko Değeri"));

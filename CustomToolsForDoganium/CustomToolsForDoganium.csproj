@@ -46,8 +46,7 @@
         <Reference Include="UIAutomationTypes"/>
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="ForExel.cs"/>
-        <Compile Include="ForNotepad.cs" />
+        <Compile Include="ClipboardInsert.cs" />
         <Compile Include="Program.cs"/>
         <Compile Include="InsuranceOffer.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>

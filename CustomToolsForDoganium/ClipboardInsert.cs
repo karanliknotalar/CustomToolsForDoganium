@@ -2,13 +2,14 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 
 namespace CustomToolsForDoganium
 {
-    internal static class ForNotepad
+    internal static class ClipboardInsert
     {
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
@@ -52,8 +53,13 @@ namespace CustomToolsForDoganium
                 return;
             }
 
-            // Sadece Notepad++ önplandaysa çalış
-            if (!proc.ProcessName.ToLower().Contains("notepad++"))
+            var processName = proc.ProcessName.ToLower();
+
+            var isNotepadPlusPlus = processName.Contains("notepad++");
+            var isExcel = processName.Contains("excel");
+
+            // Sadece Notepad++ veya Excel önplandaysa çalış
+            if (!isNotepadPlusPlus && !isExcel)
             {
                 return;
             }
@@ -65,9 +71,12 @@ namespace CustomToolsForDoganium
             }
 
             var previousClipboard = Clipboard.GetText();
-            var summary = BuildSummary(previousClipboard);
 
-            if (summary == null)
+            var summary = isNotepadPlusPlus
+                ? BuildSummaryForNotepad(previousClipboard)
+                : BuildSummaryForExel(previousClipboard);
+
+            if (string.IsNullOrEmpty(summary))
             {
                 Tools.ShowNotifyWarning(notifyIcon,
                     "Panodaki veri istenen formatta değil! (Sigortalı / Plaka bilgisi bulunamadı)");
@@ -80,10 +89,11 @@ namespace CustomToolsForDoganium
             Thread.Sleep(150);
             Clipboard.SetText(previousClipboard);
 
-            Tools.ShowNotifyInfo(notifyIcon, "Özet bilgi Notepad++ içine yapıştırıldı!");
+            //Tools.ShowNotifyInfo(notifyIcon, "Özet bilgi " + (isNotepadPlusPlus ? "Notepad++" : "Excel") + " içine yapıştırıldı!");
+            Console.WriteLine("[" +(isNotepadPlusPlus ? "Notepad++" : "Excel") +"]: " +  summary);
         }
 
-        private static string BuildSummary(string text)
+        private static string BuildSummaryForNotepad(string text)
         {
             var lines = text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
 
@@ -107,6 +117,70 @@ namespace CustomToolsForDoganium
             var tarih = DateTime.Now.ToString("dd.MM.yyyy");
 
             return $"{tarih} - {sigortali} - {plaka} - {policeTuru}";
+        }
+
+        private static string BuildSummaryForExel(string input)
+        {
+            try
+            {
+                var lines = input.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+
+                if (lines.Length < 2) return null;
+
+                var sb = new StringBuilder();
+
+                if (lines[1].Contains("TC:"))
+                {
+                    var adSoyad = GetSafeValue(lines, 0, "Sigortalı:");
+                    var tc = GetSafeValue(lines, 1, "TC:");
+                    var dt = GetSafeValue(lines, 2, "DT:");
+                    var plaka = GetSafeValue(lines, 3, "Plaka:");
+                    var seri = GetSafeValue(lines, 4, "Seri:");
+
+                    sb.Append(adSoyad);
+                    sb.Append("\t\t");
+                    sb.Append(tc);
+                    sb.Append("\t");
+                    sb.Append(dt);
+                    sb.Append("\t");
+                    sb.Append(plaka);
+                    sb.Append("\t");
+                    sb.Append(seri);
+                    sb.Append("\t");
+                }
+                else if (lines[1].Contains("Vergi:"))
+                {
+                    var firmaAdi = GetSafeValue(lines, 0, "Sigortalı:");
+                    var vergi = GetSafeValue(lines, 1, "Vergi:");
+                    var plaka = GetSafeValue(lines, 2, "Plaka:");
+                    var seri = GetSafeValue(lines, 3, "Seri:");
+
+                    sb.Append(firmaAdi);
+                    sb.Append("\t\t");
+                    sb.Append(vergi);
+                    sb.Append("\t\t");
+                    sb.Append(plaka);
+                    sb.Append("\t");
+                    sb.Append(seri);
+                    sb.Append("\t");
+                }
+                else
+                {
+                    return null;
+                }
+
+                return sb.ToString();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("[EXEL]  Hatalı işlem: " + e.Message);
+                return null;
+            }
+        }
+
+        private static string GetSafeValue(string[] lines, int index, string prefix)
+        {
+            return index >= lines.Length ? "" : lines[index].Replace(prefix, "").Trim();
         }
     }
 }

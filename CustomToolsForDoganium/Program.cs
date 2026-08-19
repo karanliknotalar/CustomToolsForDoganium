@@ -94,7 +94,7 @@ namespace CustomToolsForDoganium
             Console.WriteLine("Ctrl + Shift + C : Erişilebilir metni yakala");
             Console.WriteLine("💡 Pencereyi küçülttüğünde saat yanına (tray) gizlenecektir.");
             Tools.EnsureNotificationsEnabled();
-            ForExel.Start();
+            // ForExel.Start();
 
             while (true)
             {
@@ -111,9 +111,9 @@ namespace CustomToolsForDoganium
                         Thread.Sleep(800);
                     }
                     
-                    if (ForNotepad.IsHotkeyPressed())
+                    if (ClipboardInsert.IsHotkeyPressed())
                     {
-                        ForNotepad.TryInsertSummary(_notifyIcon);
+                        ClipboardInsert.TryInsertSummary(_notifyIcon);
                     }
 
                     Application.DoEvents();

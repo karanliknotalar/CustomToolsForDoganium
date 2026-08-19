@@ -125,24 +125,143 @@ namespace CustomToolsForDoganium
             return $"{tarih} - {sigortali} - {plaka} - {policeTuru}";
         }
 
+        // private static string BuildSummaryForExel(string input)
+        // {
+        //     try
+        //     {
+        //         var lines = input.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+        //
+        //         if (lines.Length < 2) return null;
+        //
+        //         var sb = new StringBuilder();
+        //
+        //         if (lines[1].Contains("TC:"))
+        //         {
+        //             var adSoyad = GetSafeValue(lines, 0, "Sigortalı:");
+        //             var tc = GetSafeValue(lines, 1, "TC:");
+        //             var dt = GetSafeValue(lines, 2, "DT:");
+        //             var plaka = GetSafeValue(lines, 3, "Plaka:");
+        //             var seri = GetSafeValue(lines, 4, "Seri:");
+        //
+        //             sb.Append(adSoyad);
+        //             sb.Append("\t\t");
+        //             sb.Append(tc);
+        //             sb.Append("\t");
+        //             sb.Append(dt);
+        //             sb.Append("\t");
+        //             sb.Append(plaka);
+        //             sb.Append("\t");
+        //             sb.Append(seri);
+        //             sb.Append("\t");
+        //         }
+        //         else if (lines[1].Contains("Vergi:"))
+        //         {
+        //             var firmaAdi = GetSafeValue(lines, 0, "Sigortalı:");
+        //             var vergi = GetSafeValue(lines, 1, "Vergi:");
+        //             var plaka = GetSafeValue(lines, 2, "Plaka:");
+        //             var seri = GetSafeValue(lines, 3, "Seri:");
+        //
+        //             sb.Append(firmaAdi);
+        //             sb.Append("\t\t");
+        //             sb.Append(vergi);
+        //             sb.Append("\t\t");
+        //             sb.Append(plaka);
+        //             sb.Append("\t");
+        //             sb.Append(seri);
+        //             sb.Append("\t");
+        //         }
+        //         else
+        //         {
+        //             return null;
+        //         }
+        //
+        //         return sb.ToString();
+        //     }
+        //     catch (Exception e)
+        //     {
+        //         Console.WriteLine("[EXEL]  Hatalı işlem: " + e.Message);
+        //         return null;
+        //     }
+        // }
+        //
+        // private static string GetSafeValue(string[] lines, int index, string prefix)
+        // {
+        //     return index >= lines.Length ? "" : lines[index].Replace(prefix, "").Trim();
+        // }
+        
         private static string BuildSummaryForExel(string input)
         {
             try
             {
                 var lines = input.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
-
+        
                 if (lines.Length < 2) return null;
-
+        
                 var sb = new StringBuilder();
-
-                if (lines[1].Contains("TC:"))
+        
+                var sigortaliLine = lines.FirstOrDefault(l =>
+                    l.Trim().StartsWith("Sigortalı:", StringComparison.OrdinalIgnoreCase));
+        
+                if (sigortaliLine != null)
+                {
+                    // Satır numarasından bağımsız, etikete göre arama
+                    var tcLine = lines.FirstOrDefault(l =>
+                        l.Trim().StartsWith("TC:", StringComparison.OrdinalIgnoreCase));
+                    var vergiLine = lines.FirstOrDefault(l =>
+                        l.Trim().StartsWith("Vergi:", StringComparison.OrdinalIgnoreCase));
+        
+                    if (tcLine != null)
+                    {
+                        var adSoyad = GetSafeValueByLabel(lines, "Sigortalı:");
+                        var tc = GetSafeValueByLabel(lines, "TC:");
+                        var dt = GetSafeValueByLabel(lines, "DT:");
+                        var plaka = GetSafeValueByLabel(lines, "Plaka:");
+                        var seri = GetSafeValueByLabel(lines, "Seri:");
+                        var tel = GetSafeValueByLabel(lines, "Tel:");
+        
+                        sb.Append(adSoyad);
+                        sb.Append("\t\t");
+                        sb.Append(tc);
+                        sb.Append("\t");
+                        sb.Append(dt);
+                        sb.Append("\t");
+                        sb.Append(plaka);
+                        sb.Append("\t");
+                        sb.Append(seri);
+                        sb.Append("\t\t");
+                        sb.Append(tel);
+                    }
+                    else if (vergiLine != null)
+                    {
+                        var firmaAdi = GetSafeValueByLabel(lines, "Sigortalı:");
+                        var vergi = GetSafeValueByLabel(lines, "Vergi:");
+                        var plaka = GetSafeValueByLabel(lines, "Plaka:");
+                        var seri = GetSafeValueByLabel(lines, "Seri:");
+                        var tel = GetSafeValueByLabel(lines, "Tel:");
+        
+                        sb.Append(firmaAdi);
+                        sb.Append("\t\t");
+                        sb.Append(vergi);
+                        sb.Append("\t\t");
+                        sb.Append(plaka);
+                        sb.Append("\t");
+                        sb.Append(seri);
+                        sb.Append("\t\t");
+                        sb.Append(tel);
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                else if (lines[1].Contains("TC:"))
                 {
                     var adSoyad = GetSafeValue(lines, 0, "Sigortalı:");
                     var tc = GetSafeValue(lines, 1, "TC:");
                     var dt = GetSafeValue(lines, 2, "DT:");
                     var plaka = GetSafeValue(lines, 3, "Plaka:");
                     var seri = GetSafeValue(lines, 4, "Seri:");
-
+        
                     sb.Append(adSoyad);
                     sb.Append("\t\t");
                     sb.Append(tc);
@@ -160,7 +279,7 @@ namespace CustomToolsForDoganium
                     var vergi = GetSafeValue(lines, 1, "Vergi:");
                     var plaka = GetSafeValue(lines, 2, "Plaka:");
                     var seri = GetSafeValue(lines, 3, "Seri:");
-
+        
                     sb.Append(firmaAdi);
                     sb.Append("\t\t");
                     sb.Append(vergi);
@@ -174,7 +293,7 @@ namespace CustomToolsForDoganium
                 {
                     return null;
                 }
-
+        
                 return sb.ToString();
             }
             catch (Exception e)
@@ -183,10 +302,18 @@ namespace CustomToolsForDoganium
                 return null;
             }
         }
-
+        
         private static string GetSafeValue(string[] lines, int index, string prefix)
         {
             return index >= lines.Length ? "" : lines[index].Replace(prefix, "").Trim();
+        }
+        
+        private static string GetSafeValueByLabel(string[] lines, string prefix)
+        {
+            var line = lines.FirstOrDefault(l =>
+                l.Trim().StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+        
+            return line == null ? "" : line.Trim().Substring(prefix.Length).Trim();
         }
     }
 }

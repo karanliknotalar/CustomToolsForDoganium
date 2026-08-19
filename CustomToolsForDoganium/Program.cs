@@ -313,13 +313,13 @@ namespace CustomToolsForDoganium
             else if (rawText.Contains("Genel Bilgiler"))
             {
                 if (lines.Length == 0) return null;
-                
+
                 var vehicleGroupName = Tools.GetVehicleGroupName(Tools.GetBeforeValue(lines, "Kasko Değeri"));
                 var vehicleBrandCode = Tools.GetBeforeValue(lines, "Yakıt Tipi").Split(' ').First();
                 var vehicleTypeCode = Tools.GetNextValue(lines, "Tip Kodu").Split(' ').First();
                 var vehicleModelYear = Tools.GetNextValue(lines, "Model Yılı");
                 var documentSeries = Tools.GetNextValue(lines, "Plaka");
-                
+
                 if (!Regex.IsMatch(documentSeries, @"^[A-Za-z]{1,2}\d{6}$"))
                 {
                     documentSeries = "";
@@ -335,7 +335,7 @@ namespace CustomToolsForDoganium
                 var plate = Tools.GetBeforeValue(lines, "Plakanın Son Sorgusunu Getir");
                 var customerName = Tools.GetToTitleCase(Tools.GetBeforeValue(lines, "gcInsuranceInformation"));
 
-                result.AppendLine(customerName);
+                result.AppendLine($"Sigortalı: {customerName}");
 
                 switch (identifyNo.Length)
                 {
@@ -349,19 +349,17 @@ namespace CustomToolsForDoganium
                 }
 
                 result.AppendLine($"Plaka: {plate}")
-                    .AppendLine($"Seri: {documentSeries}");
-
-                // if (string.IsNullOrEmpty(documentSeries))
-                // {
-                //     result.AppendLine($"Motor: {motorNo}")
-                //         .AppendLine($"Şasi: {chassisNo}");
-                // }
-                
-                result.AppendLine($"Motor: {motorNo}")
-                    .AppendLine($"Şasi: {chassisNo}");
-
-                result.AppendLine($"{vehicleGroupName} - {vehicleModelYear} Model")
-                    .AppendLine($"{vehicleBrandCode}{vehicleTypeCode}");
+                    .AppendLine($"Seri: {documentSeries}")
+                    // if (string.IsNullOrEmpty(documentSeries))
+                    // {
+                    //     result.AppendLine($"Motor: {motorNo}")
+                    //         .AppendLine($"Şasi: {chassisNo}");
+                    // }
+                    .AppendLine($"Motor: {motorNo}")
+                    .AppendLine($"Şasi: {chassisNo}")
+                    .AppendLine($"Kullanım Şekli: {vehicleGroupName}")
+                    .AppendLine($"Model Yılı: {vehicleModelYear}")
+                    .AppendLine($"Marka Kodu: {vehicleBrandCode}{vehicleTypeCode}");
 
                 Tools.ShowNotifyInfo(_notifyIcon,
                     "Doganium müşteri ve araç bilgileri ekranından veriler kopyalandı!");

@@ -90,7 +90,7 @@ namespace CustomToolsForDoganium
             Clipboard.SetText(previousClipboard);
 
             //Tools.ShowNotifyInfo(notifyIcon, "Özet bilgi " + (isNotepadPlusPlus ? "Notepad++" : "Excel") + " içine yapıştırıldı!");
-            Console.WriteLine("[" +(isNotepadPlusPlus ? "Notepad++" : "Excel") +"]: " +  summary);
+            Console.WriteLine("[" + (isNotepadPlusPlus ? "Notepad++" : "Excel") + "]: " + summary);
         }
 
         private static string BuildSummaryForNotepad(string text)
@@ -102,19 +102,25 @@ namespace CustomToolsForDoganium
             var plakaLine = lines.FirstOrDefault(l =>
                 l.Trim().StartsWith("Plaka:", StringComparison.OrdinalIgnoreCase));
 
-            if (sigortaliLine == null || plakaLine == null) return null;
+            if (sigortaliLine == null) return null;
 
             var policeLine = lines.FirstOrDefault(l =>
                 Regex.IsMatch(l.Trim(), @"^(Trafik|Kasko|Imm|TSS|Konut|İşyeri)#+", RegexOptions.IgnoreCase));
 
             var sigortali = sigortaliLine.Split([':'], 2)[1].Trim();
-            var plaka = plakaLine.Split([':'], 2)[1].Trim();
 
             var policeTuru = policeLine != null
                 ? Regex.Match(policeLine.Trim(), @"^(Trafik|Kasko|Imm|TSS|Konut|İşyeri)", RegexOptions.IgnoreCase).Value
                 : "POLİÇETÜRÜ";
 
             var tarih = DateTime.Now.ToString("dd.MM.yyyy");
+
+            if (plakaLine == null)
+            {
+                return $"{tarih} - {sigortali} - {policeTuru}";
+            }
+
+            var plaka = plakaLine.Split([':'], 2)[1].Trim();
 
             return $"{tarih} - {sigortali} - {plaka} - {policeTuru}";
         }

@@ -29,7 +29,9 @@ namespace CustomToolsForDoganium
                     try
                     {
                         if (IsExcelActive())
+                        {
                             CheckAndConvertClipboard();
+                        }
                     }
                     catch
                     {
@@ -41,7 +43,6 @@ namespace CustomToolsForDoganium
             });
 
             _workerThread.SetApartmentState(ApartmentState.STA);
-            // _workerThread.IsBackground = true; // Ana program kapanınca bu da kapanır
             _workerThread.Start();
         }
 
@@ -62,8 +63,6 @@ namespace CustomToolsForDoganium
 
         private static void CheckAndConvertClipboard()
         {
-            if (!IsExcelActive()) return;
-            
             var rawText = GetClipboardText();
             
             if (string.IsNullOrEmpty(rawText) || rawText == _lastProcessedRaw) return;
@@ -113,7 +112,7 @@ namespace CustomToolsForDoganium
         {
             try
             {
-                var lines = input.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                var lines = input.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
 
                 if (lines.Length < 2) return null;
 

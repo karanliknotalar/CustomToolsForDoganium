@@ -114,7 +114,6 @@ namespace CustomToolsForDoganium
                     if (ForNotepad.IsHotkeyPressed())
                     {
                         ForNotepad.TryInsertSummary(_notifyIcon);
-                        Thread.Sleep(800);
                     }
 
                     Application.DoEvents();

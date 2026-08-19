@@ -17,12 +17,22 @@ namespace CustomToolsForDoganium
         private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
         [DllImport("user32.dll")]
-        private static extern short GetAsyncKeyState(Keys vKey);
+        private static extern short GetAsyncKeyState(int vKey);
+
+        private const int VK_CONTROL = 0x11;
+        private const int VK_Q = 0x51;
+
+        private static bool _wasQDown;
 
         public static bool IsHotkeyPressed()
         {
-            return (GetAsyncKeyState(Keys.ControlKey) & 0x8000) != 0 &&
-                   (GetAsyncKeyState(Keys.Q) & 0x8000) != 0;
+            var ctrlDown = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
+            var qDown = (GetAsyncKeyState(VK_Q) & 0x8000) != 0;
+
+            var triggered = ctrlDown && qDown && !_wasQDown;
+            _wasQDown = qDown;
+
+            return triggered;
         }
 
         public static void TryInsertSummary(NotifyIcon notifyIcon)

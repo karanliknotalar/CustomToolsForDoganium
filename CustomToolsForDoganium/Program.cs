@@ -110,6 +110,12 @@ namespace CustomToolsForDoganium
                         CaptureText_SafeWindowsOnly();
                         Thread.Sleep(800);
                     }
+                    
+                    if (ForNotepad.IsHotkeyPressed())
+                    {
+                        ForNotepad.TryInsertSummary(_notifyIcon);
+                        Thread.Sleep(800);
+                    }
 
                     Application.DoEvents();
                     Thread.Sleep(100);

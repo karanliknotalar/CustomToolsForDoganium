@@ -38,7 +38,7 @@ namespace CustomToolsForDoganium
                         Console.Error.WriteLine("Error while trying to get clipboard");
                     }
 
-                    Thread.Sleep(1000);
+                    Thread.Sleep(250);
                 }
             });
 
@@ -64,24 +64,24 @@ namespace CustomToolsForDoganium
         private static void CheckAndConvertClipboard()
         {
             var rawText = GetClipboardText();
-            
+
             if (string.IsNullOrEmpty(rawText) || rawText == _lastProcessedRaw) return;
-            
+
             _lastProcessedRaw = rawText;
-            
+
             if (!rawText.Contains("TC:") && !rawText.Contains("Vergi:")) return;
 
             var formattedText = ParseAndFormat(rawText);
-            
+
             if (string.IsNullOrEmpty(formattedText)) return;
-            
+
             SetClipboardText(formattedText);
 
             Console.WriteLine("");
             Console.WriteLine("[EXEL] Kopyalanan veri exel formatına uyarlandı.");
             Console.WriteLine($"[EXEL] Uyarlanan Veri: {formattedText}");
         }
-        
+
         private static string GetClipboardText()
         {
             try
@@ -120,7 +120,7 @@ namespace CustomToolsForDoganium
 
                 if (lines[1].Contains("TC:"))
                 {
-                    var adSoyad = lines[0].Trim();
+                    var adSoyad = GetSafeValue(lines, 0, "Sigortalı:");
                     var tc = GetSafeValue(lines, 1, "TC:");
                     var dt = GetSafeValue(lines, 2, "DT:");
                     var plaka = GetSafeValue(lines, 3, "Plaka:");
@@ -139,7 +139,7 @@ namespace CustomToolsForDoganium
                 }
                 else if (lines[1].Contains("Vergi:"))
                 {
-                    var firmaAdi = lines[0].Trim();
+                    var firmaAdi = GetSafeValue(lines, 0, "Sigortalı:");
                     var vergi = GetSafeValue(lines, 1, "Vergi:");
                     var plaka = GetSafeValue(lines, 2, "Plaka:");
                     var seri = GetSafeValue(lines, 3, "Seri:");

@@ -15,6 +15,7 @@ namespace CustomToolsForDoganium.Action
         {
             var template = new StringBuilder()
                 .AppendLine("###############################################################################")
+                .AppendLine("Tel:")
                 .AppendLine()
                 .AppendLine("Sigortalı: ")
                 .AppendLine("TC: ")
@@ -26,6 +27,7 @@ namespace CustomToolsForDoganium.Action
                 .AppendLine("Kullanım Şekli: ")
                 .AppendLine("Model Yılı: ")
                 .AppendLine("Marka Kodu: ")
+                .AppendLine()
                 .ToString();
 
             ClipboardPasteHelper.PasteAndRestore(template);

@@ -11,7 +11,7 @@ namespace CustomToolsForDoganium.Action
 {
     internal sealed class SummaryInsertAction : IHotkeyAction
     {
-        public int VirtualKey => Win32Native.VK_Q;
+        public Keys VirtualKey => Keys.Q;
         public TargetApp SupportedApps => TargetApp.NotepadPlusPlus | TargetApp.Excel;
 
         public void Execute(string clipboardText, TargetApp activeApp, NotifyIcon notifyIcon)

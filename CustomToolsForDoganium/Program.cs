@@ -17,7 +17,7 @@ using CustomToolsForDoganium.Modal;
 
 namespace CustomToolsForDoganium
 {
-    internal static partial class Program
+    internal static class Program
     {
         // ===================== WIN32 API =====================
         [DllImport("user32.dll")]

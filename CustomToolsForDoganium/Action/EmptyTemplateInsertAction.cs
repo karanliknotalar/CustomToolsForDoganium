@@ -8,7 +8,7 @@ namespace CustomToolsForDoganium.Action
 {
     internal sealed class EmptyTemplateInsertAction : IHotkeyAction
     {
-        public int VirtualKey => Win32Native.VK_OEM_2;
+        public Keys VirtualKey => Keys.Oem2;
         public TargetApp SupportedApps => TargetApp.NotepadPlusPlus;
 
         public void Execute(string clipboardText, TargetApp activeApp, NotifyIcon notifyIcon)

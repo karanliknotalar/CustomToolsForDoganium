@@ -5,7 +5,7 @@ namespace CustomToolsForDoganium.Interface
 {
     internal interface IHotkeyAction
     {
-        int VirtualKey { get; }
+        Keys VirtualKey { get; }
         TargetApp SupportedApps { get; }
 
         /// <summary>clipboardText pano boşsa null olabilir.</summary>

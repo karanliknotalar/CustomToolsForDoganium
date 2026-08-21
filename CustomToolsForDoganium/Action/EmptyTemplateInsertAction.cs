@@ -15,7 +15,7 @@ namespace CustomToolsForDoganium.Action
         {
             var template = new StringBuilder()
                 .AppendLine("###############################################################################")
-                .AppendLine("Tel:")
+                .AppendLine("Tel: ")
                 .AppendLine()
                 .AppendLine("Sigortalı: ")
                 .AppendLine("TC: ")

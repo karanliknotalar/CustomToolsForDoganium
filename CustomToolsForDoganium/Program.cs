@@ -10,6 +10,10 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Automation;
+using CustomToolsForDoganium.Action;
+using CustomToolsForDoganium.Interface;
+using CustomToolsForDoganium.Manager;
+using CustomToolsForDoganium.Modal;
 
 namespace CustomToolsForDoganium
 {
@@ -89,12 +93,19 @@ namespace CustomToolsForDoganium
                     Environment.Exit(0);
                 })
             ]);
+            
+            var hotkeyManager = new HotkeyActionManager(_notifyIcon, new IHotkeyAction[]
+            {
+                new SummaryInsertAction(),
+                new EmptyTemplateInsertAction(),
+                new EmptyTemplateInsertCorporateAction()
+                // yeni kısayol eklemek istediğinde buraya ekleyeceksin
+            });
 
             Console.WriteLine("✅ Yönetici yetkisiyle çalışıyor");
             Console.WriteLine("Ctrl + Shift + C : Erişilebilir metni yakala");
             Console.WriteLine("💡 Pencereyi küçülttüğünde saat yanına (tray) gizlenecektir.");
             Tools.EnsureNotificationsEnabled();
-            // ForExel.Start();
 
             while (true)
             {
@@ -111,10 +122,7 @@ namespace CustomToolsForDoganium
                         Thread.Sleep(800);
                     }
                     
-                    if (ClipboardInsert.IsHotkeyPressed())
-                    {
-                        ClipboardInsert.TryInsertSummary(_notifyIcon);
-                    }
+                    hotkeyManager.Poll();
 
                     Application.DoEvents();
                     Thread.Sleep(100);
@@ -355,11 +363,6 @@ namespace CustomToolsForDoganium
 
                 result.AppendLine($"Plaka: {plate}")
                     .AppendLine($"Seri: {documentSeries}")
-                    // if (string.IsNullOrEmpty(documentSeries))
-                    // {
-                    //     result.AppendLine($"Motor: {motorNo}")
-                    //         .AppendLine($"Şasi: {chassisNo}");
-                    // }
                     .AppendLine($"Motor: {motorNo}")
                     .AppendLine($"Şasi: {chassisNo}")
                     .AppendLine($"Kullanım Şekli: {vehicleGroupName}")

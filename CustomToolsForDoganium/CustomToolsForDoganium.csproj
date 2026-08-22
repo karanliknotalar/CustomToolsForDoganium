@@ -54,6 +54,7 @@
         <Compile Include="App\TrayIconFactory.cs" />
         <Compile Include="Capture\CaptureHotkeyBindings.cs" />
         <Compile Include="Capture\CustomerInfoTextFormatter.cs" />
+        <Compile Include="Capture\CustomerNameNormalizer.cs" />
         <Compile Include="Capture\DoganiumCaptureService.cs" />
         <Compile Include="Capture\DoganiumTextFormatter.cs" />
         <Compile Include="Capture\InsuranceOffer.cs" />

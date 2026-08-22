@@ -33,8 +33,8 @@ internal static class CustomerInfoTextFormatter
         var birthDate = TextExtractionUtils.GetDate(TextExtractionUtils.GetBeforeValue(lines, "TC / Vergi No"));
         var identifyNo = TextExtractionUtils.GetNextValue(lines, "TC / Vergi No");
         var plate = TextExtractionUtils.GetBeforeValue(lines, "Plakanın Son Sorgusunu Getir").Replace(" ", "");
-        var customerName =
-            TextExtractionUtils.GetToTitleCase(TextExtractionUtils.GetBeforeValue(lines, "gcInsuranceInformation"));
+        var customerName = CustomerNameNormalizer.Apply(
+            TextExtractionUtils.GetToTitleCase(TextExtractionUtils.GetBeforeValue(lines, "gcInsuranceInformation")));
 
         var result = new StringBuilder();
         result.AppendLine($"Sigortalı: {customerName}");

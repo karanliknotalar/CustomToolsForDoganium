@@ -1,23 +1,26 @@
 ﻿using System.Collections.Generic;
 using System.Windows.Forms;
-using CustomToolsForDoganium.Interface;
+using CustomToolsForDoganium.Native;
 
-namespace CustomToolsForDoganium.Manager
+namespace CustomToolsForDoganium.Hotkeys
 {
+    /// <summary>Kayıtlı tüm <see cref="IHotkeyAction"/>'ları her tick'te kontrol eder ve
+    /// önplandaki uygulamayla eşleşeni tetikler. Yeni bir kısayol eklemek için sadece
+    /// yeni bir IHotkeyAction implementasyonu yazıp kayıt listesine eklemek yeterlidir.</summary>
     internal sealed class HotkeyActionManager
     {
         private readonly List<(IHotkeyAction Action, HotkeyWatcher Watcher)> _entries = new();
         private readonly NotifyIcon _notifyIcon;
 
-        public HotkeyActionManager(NotifyIcon notifyIcon, IEnumerable<IHotkeyAction> actions)
+        internal HotkeyActionManager(NotifyIcon notifyIcon, IEnumerable<IHotkeyAction> actions)
         {
             _notifyIcon = notifyIcon;
             foreach (var action in actions)
                 _entries.Add((action, new HotkeyWatcher(action.VirtualKey)));
         }
 
-        /// <summary>Timer tick içinde çağrılır.</summary>
-        public void Poll()
+        /// <summary>Ana döngüde her tick çağrılır.</summary>
+        internal void Poll()
         {
             foreach (var (action, watcher) in _entries)
             {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CustomToolsForDoganium.Manager
+namespace CustomToolsForDoganium.Hotkeys
 {
     [Flags]
     internal enum TargetApp

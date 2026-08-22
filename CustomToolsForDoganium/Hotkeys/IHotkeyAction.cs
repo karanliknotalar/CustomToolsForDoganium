@@ -1,8 +1,8 @@
 ﻿using System.Windows.Forms;
-using CustomToolsForDoganium.Manager;
 
-namespace CustomToolsForDoganium.Interface
+namespace CustomToolsForDoganium.Hotkeys
 {
+    /// <summary>Belirli bir Ctrl+Tuş kombinasyonuna ve hedef uygulama(lar)a bağlı bir kısayol eylemi.</summary>
     internal interface IHotkeyAction
     {
         Keys VirtualKey { get; }

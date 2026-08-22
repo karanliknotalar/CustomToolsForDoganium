@@ -1,17 +1,17 @@
-﻿using System;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
+using CustomToolsForDoganium.Native;
 
-namespace CustomToolsForDoganium.Manager
+namespace CustomToolsForDoganium.Hotkeys
 {
     /// <summary>Ctrl + verilen tuşu, basılı tutmada tekrar tetiklenmeyecek şekilde (edge-triggered) izler.</summary>
     internal sealed class HotkeyWatcher(Keys vKey)
     {
         private bool _wasKeyDown;
 
-        public bool IsPressed()
+        internal bool IsPressed()
         {
-            var ctrlDown = (Win32Native.GetAsyncKeyState(Keys.ControlKey) & 0x8000) != 0;
-            var keyDown = (Win32Native.GetAsyncKeyState(vKey) & 0x8000) != 0;
+            var ctrlDown = Win32Native.IsKeyDown(Keys.ControlKey);
+            var keyDown = Win32Native.IsKeyDown(vKey);
 
             var triggered = ctrlDown && keyDown && !_wasKeyDown;
             _wasKeyDown = keyDown;

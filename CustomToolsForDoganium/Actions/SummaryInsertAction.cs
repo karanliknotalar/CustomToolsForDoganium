@@ -4,11 +4,12 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using CustomToolsForDoganium.Helper;
-using CustomToolsForDoganium.Interface;
-using CustomToolsForDoganium.Manager;
+using CustomToolsForDoganium.Hotkeys;
+using CustomToolsForDoganium.Notifications;
 
-namespace CustomToolsForDoganium.Action
+namespace CustomToolsForDoganium.Actions
 {
+    /// <summary>Ctrl+Q: panodaki poliçe/sigortalı bilgisinden tek satırlık özet üretip yapıştırır.</summary>
     internal sealed class SummaryInsertAction : IHotkeyAction
     {
         public Keys VirtualKey => Keys.Q;
@@ -18,7 +19,7 @@ namespace CustomToolsForDoganium.Action
         {
             if (clipboardText == null)
             {
-                Tools.ShowNotifyWarning(notifyIcon, "Panoda metin bulunamadı!");
+                NotificationService.ShowWarning(notifyIcon, "Panoda metin bulunamadı!");
                 return;
             }
 
@@ -28,7 +29,7 @@ namespace CustomToolsForDoganium.Action
 
             if (string.IsNullOrEmpty(summary))
             {
-                Tools.ShowNotifyWarning(notifyIcon,
+                NotificationService.ShowWarning(notifyIcon,
                     "Panodaki veri istenen formatta değil! (Sigortalı / Plaka bilgisi bulunamadı)");
                 return;
             }

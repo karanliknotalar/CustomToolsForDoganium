@@ -46,19 +46,31 @@
         <Reference Include="UIAutomationTypes"/>
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="Action\EmptyTemplateInsertAction.cs" />
-        <Compile Include="Action\EmptyTemplateInsertCorporateAction.cs" />
-        <Compile Include="Action\SummaryInsertAction.cs" />
+        <Compile Include="Actions\EmptyTemplateInsertAction.cs" />
+        <Compile Include="Actions\EmptyTemplateInsertCorporateAction.cs" />
+        <Compile Include="Actions\SummaryInsertAction.cs" />
+        <Compile Include="App\ApplicationRunner.cs" />
+        <Compile Include="App\TrayIconFactory.cs" />
+        <Compile Include="Capture\CaptureHotkeyWatcher.cs" />
+        <Compile Include="Capture\CustomerInfoTextFormatter.cs" />
+        <Compile Include="Capture\DoganiumCaptureService.cs" />
+        <Compile Include="Capture\DoganiumTextFormatter.cs" />
+        <Compile Include="Capture\InsuranceOffer.cs" />
+        <Compile Include="Capture\InsuranceQueryType.cs" />
+        <Compile Include="Capture\OfferListTextFormatter.cs" />
+        <Compile Include="Capture\TextExtractionUtils.cs" />
+        <Compile Include="Capture\UiAutomationTextReader.cs" />
         <Compile Include="Helper\ClipboardPasteHelper.cs" />
-        <Compile Include="Interface\IHotkeyAction.cs" />
-        <Compile Include="Manager\HotkeyActionManager.cs" />
-        <Compile Include="Manager\HotkeyWatcher.cs" />
-        <Compile Include="Manager\TargetApp.cs" />
-        <Compile Include="Manager\Win32Native.cs" />
-        <Compile Include="Modal\InsuranceOffer.cs" />
+        <Compile Include="Hotkeys\HotkeyActionManager.cs" />
+        <Compile Include="Hotkeys\HotkeyWatcher.cs" />
+        <Compile Include="Hotkeys\IHotkeyAction.cs" />
+        <Compile Include="Hotkeys\TargetApp.cs" />
+        <Compile Include="Native\ConsoleWindowNative.cs" />
+        <Compile Include="Native\Win32Native.cs" />
+        <Compile Include="Notifications\NotificationService.cs" />
         <Compile Include="Program.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>
-        <Compile Include="Tools.cs"/>
+        <Compile Include="Startup\AdminElevationService.cs" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

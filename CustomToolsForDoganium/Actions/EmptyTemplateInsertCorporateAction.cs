@@ -1,14 +1,14 @@
 ﻿using System.Text;
 using System.Windows.Forms;
 using CustomToolsForDoganium.Helper;
-using CustomToolsForDoganium.Interface;
-using CustomToolsForDoganium.Manager;
+using CustomToolsForDoganium.Hotkeys;
 
-namespace CustomToolsForDoganium.Action
+namespace CustomToolsForDoganium.Actions
 {
-    internal sealed class EmptyTemplateInsertAction : IHotkeyAction
+    /// <summary>Ctrl+T: boş kurumsal müşteri bilgi şablonunu Notepad++'a yapıştırır.</summary>
+    internal sealed class EmptyTemplateInsertCorporateAction : IHotkeyAction
     {
-        public Keys VirtualKey => Keys.Oem2;
+        public Keys VirtualKey => Keys.T;
         public TargetApp SupportedApps => TargetApp.NotepadPlusPlus;
 
         public void Execute(string clipboardText, TargetApp activeApp, NotifyIcon notifyIcon)
@@ -18,8 +18,7 @@ namespace CustomToolsForDoganium.Action
                 .AppendLine("Tel: ")
                 .AppendLine()
                 .AppendLine("Sigortalı: ")
-                .AppendLine("TC: ")
-                .AppendLine("DT: ")
+                .AppendLine("Vergi: ")
                 .AppendLine("Plaka: ")
                 .AppendLine("Seri: ")
                 .AppendLine("Motor: ")

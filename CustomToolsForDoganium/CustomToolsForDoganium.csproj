@@ -50,8 +50,9 @@
         <Compile Include="Actions\EmptyTemplateInsertCorporateAction.cs" />
         <Compile Include="Actions\SummaryInsertAction.cs" />
         <Compile Include="App\ApplicationRunner.cs" />
+        <Compile Include="App\HiddenMessageLoopForm.cs" />
         <Compile Include="App\TrayIconFactory.cs" />
-        <Compile Include="Capture\CaptureHotkeyWatcher.cs" />
+        <Compile Include="Capture\CaptureHotkeyBindings.cs" />
         <Compile Include="Capture\CustomerInfoTextFormatter.cs" />
         <Compile Include="Capture\DoganiumCaptureService.cs" />
         <Compile Include="Capture\DoganiumTextFormatter.cs" />
@@ -61,11 +62,11 @@
         <Compile Include="Capture\TextExtractionUtils.cs" />
         <Compile Include="Capture\UiAutomationTextReader.cs" />
         <Compile Include="Helper\ClipboardPasteHelper.cs" />
-        <Compile Include="Hotkeys\HotkeyActionManager.cs" />
-        <Compile Include="Hotkeys\HotkeyWatcher.cs" />
+        <Compile Include="Hotkeys\GlobalHotkeyDispatcher.cs" />
         <Compile Include="Hotkeys\IHotkeyAction.cs" />
         <Compile Include="Hotkeys\TargetApp.cs" />
         <Compile Include="Native\ConsoleWindowNative.cs" />
+        <Compile Include="Native\KeyboardHook.cs" />
         <Compile Include="Native\Win32Native.cs" />
         <Compile Include="Notifications\NotificationService.cs" />
         <Compile Include="Program.cs"/>

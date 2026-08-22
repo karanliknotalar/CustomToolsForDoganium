@@ -36,14 +36,14 @@ namespace CustomToolsForDoganium
             var consoleWindow = ConsoleWindowNative.GetHandle();
             var notifyIcon = TrayIconFactory.Create(consoleWindow);
 
-            var hotkeyManager = new HotkeyActionManager(notifyIcon, [
+            var actions = new IHotkeyAction[]
+            {
                 new SummaryInsertAction(),
                 new EmptyTemplateInsertAction(),
                 new EmptyTemplateInsertCorporateAction()
                 // yeni kısayol eklemek istediğinde buraya ekleyeceksin
-            ]);
+            };
 
-            var captureHotkeyWatcher = new CaptureHotkeyWatcher();
             var captureService = new DoganiumCaptureService(notifyIcon);
 
             Console.WriteLine("✅ Yönetici yetkisiyle çalışıyor");
@@ -51,8 +51,7 @@ namespace CustomToolsForDoganium
             Console.WriteLine("💡 Pencereyi küçülttüğünde saat yanına (tray) gizlenecektir.");
             NotificationService.EnsureNotificationsEnabled();
 
-            new ApplicationRunner(consoleWindow, notifyIcon, hotkeyManager, captureHotkeyWatcher, captureService)
-                .Run();
+            new ApplicationRunner(consoleWindow, notifyIcon, actions, captureService).Run();
         }
     }
 }

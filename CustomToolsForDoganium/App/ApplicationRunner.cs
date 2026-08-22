@@ -1,50 +1,41 @@
 ﻿using System;
-using System.Threading;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using CustomToolsForDoganium.Capture;
 using CustomToolsForDoganium.Hotkeys;
 using CustomToolsForDoganium.Native;
-using CustomToolsForDoganium.Notifications;
 
-namespace CustomToolsForDoganium.App
+namespace CustomToolsForDoganium.App;
+
+/// <summary>
+/// Uygulamanın çalışma zamanını kurar ve başlatır. Eski 100ms'lik busy-poll while döngüsü
+/// yerine: görünmez bir pencerenin sağladığı standart WinForms mesaj pompası + bu pompaya
+/// bağlı bir WH_KEYBOARD_LL klavye kancası kullanılır. Sonuç: kısayollar anında (poll
+/// gecikmesi olmadan) tetiklenir ve boşta CPU kullanımı pratikte sıfıra iner.
+/// </summary>
+internal sealed class ApplicationRunner(
+    IntPtr consoleWindow,
+    NotifyIcon notifyIcon,
+    IEnumerable<IHotkeyAction> actions,
+    DoganiumCaptureService captureService)
 {
-    /// <summary>Uygulamanın sonsuz döngüsünü çalıştırır: konsol penceresini gizler,
-    /// yakalama kısayolunu ve genel kısayol yöneticisini her tick'te kontrol eder.</summary>
-    internal sealed class ApplicationRunner(
-        IntPtr consoleWindow,
-        NotifyIcon notifyIcon,
-        HotkeyActionManager hotkeyManager,
-        CaptureHotkeyWatcher captureHotkeyWatcher,
-        DoganiumCaptureService captureService)
+    internal void Run()
     {
-        internal void Run()
-        {
-            while (true)
-            {
-                try
-                {
-                    if (ConsoleWindowNative.IsMinimized(consoleWindow))
-                        ConsoleWindowNative.Hide(consoleWindow);
+        using var messageLoopForm = new HiddenMessageLoopForm(consoleWindow);
 
-                    if (captureHotkeyWatcher.TryGetPressedQueryType(out var queryType))
-                    {
-                        captureService.Capture(queryType);
-                        Thread.Sleep(800);
-                    }
+        // .Handle erişimi, WinForms'da handle'ı henüz yoksa oluşturulmasını garanti eder
+        // (bkz. Control.Handle belgeleri). Bunu kancayı kurmadan ÖNCE yapıyoruz; aksi halde
+        // kullanıcı çok erken bir kısayola basarsa dispatcher'ın BeginInvoke çağrısı henüz
+        // var olmayan bir handle üzerinde exception fırlatabilirdi.
+        _ = messageLoopForm.Handle;
 
-                    hotkeyManager.Poll();
+        var dispatcher = new GlobalHotkeyDispatcher(
+            actions, CaptureHotkeyBindings.All, captureService, notifyIcon, messageLoopForm);
 
-                    Application.DoEvents();
-                    Thread.Sleep(100);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error: " + ex.Message);
-                    Console.WriteLine("Stack Trace: " + ex.StackTrace);
-                    NotificationService.ShowWarning(notifyIcon,
-                        "TEKRAR DENE! UYGULAMA EKRANI YAKALARKEN BİR HATA OLUŞTU.");
-                }
-            }
-        }
+        using var keyboardHook = new KeyboardHook();
+        keyboardHook.KeyDown += dispatcher.OnKeyDown;
+        keyboardHook.Install();
+
+        Application.Run(messageLoopForm);
     }
 }

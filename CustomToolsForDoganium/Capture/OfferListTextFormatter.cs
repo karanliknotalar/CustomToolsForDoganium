@@ -6,72 +6,73 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using CustomToolsForDoganium.Notifications;
 
-namespace CustomToolsForDoganium.Capture
+namespace CustomToolsForDoganium.Capture;
+
+/// <summary>"Yeniden Sorgula" ekranındaki teklif satırlarını fiyata göre sıralı özet metne çevirir.</summary>
+internal static class OfferListTextFormatter
 {
-    /// <summary>"Yeniden Sorgula" ekranındaki teklif satırlarını fiyata göre sıralı özet metne çevirir.</summary>
-    internal static class OfferListTextFormatter
+    private static readonly Regex OfferNumberRegex = new(@"[\d/]{7,}", RegexOptions.Compiled);
+
+    internal static string Format(string[] lines, InsuranceQueryType queryType, NotifyIcon notifyIcon)
     {
-        internal static string Format(string[] lines, InsuranceQueryType queryType, NotifyIcon notifyIcon)
+        var rowLines = lines
+            .Where(line => line.Trim().StartsWith(";;", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        if (rowLines.Count == 0) return null;
+
+        var offers = new List<InsuranceOffer>();
+        var counter = 0;
+
+        foreach (var line in rowLines)
         {
-            var rowLines = lines
-                .Where(line => line.Trim().StartsWith(";;", StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            var parts = line.Split(';');
+            if (parts.Length < 7) continue;
 
-            if (rowLines.Count == 0) return null;
+            var companyName = parts[2].Trim();
+            var priceStr = parts[(int)queryType].Trim();
 
-            var offers = new List<InsuranceOffer>();
-            var counter = 0;
+            priceStr = priceStr.Split(',')[0].Split('.')[0];
+            if (!int.TryParse(priceStr, out var price)) continue;
 
-            foreach (var line in rowLines)
+            var offerNumber = "";
+            var index = (int)queryType + 3;
+            var offerSection = (index < parts.Length ? parts[index] : null)?.Trim() ?? string.Empty;
+            var companyUpper = companyName.ToUpper();
+
+            if (!string.IsNullOrWhiteSpace(offerSection) && !companyUpper.Contains("HDI") &&
+                !companyUpper.Contains("SOMPO") && !companyUpper.Contains("HEPİYİ") &&
+                !companyUpper.Contains("AXA") && counter < 6)
             {
-                var parts = line.Split(';');
-                if (parts.Length < 7) continue;
-
-                var companyName = parts[2].Trim();
-                var priceStr = parts[(int)queryType].Trim();
-
-                priceStr = priceStr.Split(',')[0].Split('.')[0];
-                if (!int.TryParse(priceStr, out var price)) continue;
-
-                var offerNumber = "";
-                var index = (int)queryType + 3;
-                var offerSection = (index < parts.Length ? parts[index] : null)?.Trim() ?? string.Empty;
-                var companyUpper = companyName.ToUpper();
-
-                if (!string.IsNullOrWhiteSpace(offerSection) && !companyUpper.Contains("HDI") &&
-                    !companyUpper.Contains("SOMPO") && !companyUpper.Contains("HEPİYİ") &&
-                    !companyUpper.Contains("AXA") && counter < 6)
-                {
-                    var match = Regex.Match(offerSection, @"[\d/]{7,}");
-                    if (match.Success) offerNumber = match.Value.Trim();
-                }
-
-                if (offerSection.Contains("Bilgi") || offerSection.Contains("Hata"))
-                {
-                    companyName += " (?)";
-                }
-
-                offers.Add(new InsuranceOffer
-                {
-                    CompanyName = companyName.ToUpper(),
-                    Price = price,
-                    OfferNumber = offerNumber
-                });
-                counter++;
+                var match = OfferNumberRegex.Match(offerSection);
+                if (match.Success) offerNumber = match.Value.Trim();
             }
 
-            offers = offers.OrderBy(o => o.Price).ToList();
-
-            var result = new StringBuilder();
-            foreach (var offer in offers)
+            if (offerSection.Contains("Bilgi") || offerSection.Contains("Hata"))
             {
-                result.AppendLine(string.IsNullOrWhiteSpace(offer.OfferNumber)
-                    ? $"{offer.Price} TL {offer.CompanyName}"
-                    : $"{offer.Price} TL {offer.CompanyName} - {offer.OfferNumber}");
+                companyName += " (?)";
             }
 
-            NotificationService.ShowInfo(notifyIcon, "Doganium Sorgu ekranından veriler kopyalandı!");
-            return result.ToString();
+            offers.Add(new InsuranceOffer
+            {
+                CompanyName = companyName.ToUpper(),
+                Price = price,
+                OfferNumber = offerNumber
+            });
+            counter++;
         }
+
+        offers = offers.OrderBy(o => o.Price).ToList();
+
+        var result = new StringBuilder();
+        foreach (var offer in offers)
+        {
+            result.AppendLine(string.IsNullOrWhiteSpace(offer.OfferNumber)
+                ? $"{offer.Price} TL {offer.CompanyName}"
+                : $"{offer.Price} TL {offer.CompanyName} - {offer.OfferNumber}");
+        }
+
+        NotificationService.ShowInfo(notifyIcon, "Doganium Sorgu ekranından veriler kopyalandı!");
+        return result.ToString();
     }
 }

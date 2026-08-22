@@ -6,8 +6,6 @@ namespace CustomToolsForDoganium.Capture;
 /// Doğanium'dan gelen ham sigortalı/müşteri adını, bilinen bir ifadeyi içeriyorsa
 /// tamamen o ifadeye karşılık gelen temiz isimle değiştirir (kısmi/parça değiştirme değil —
 /// "içeriyorsa" burada bir TETİKLEYİCİ, eşleşince tüm isim ReplaceWith değeriyle değişir).
-/// Örn. ham isim "AYH LOJİSTİK OTOMOTİV VE DIŞ TİCARET LİMİTED ŞİRKETİ" olsa bile,
-/// "AYH LOJİSTİK OTOMOTİV" ifadesini içerdiği için sonuç doğrudan "Ayh Lojistik Otomotiv" olur.
 /// Liste sırayla taranır, İLK eşleşen kazanır. Yeni bir eşleşme eklemek istediğinde
 /// <see cref="Replacements"/> listesine bir satır eklemen yeterli.
 /// Eşleştirme <c>tr-TR</c> kültürüne göre büyük/küçük harf duyarsızdır — Türkçe'ye özgü

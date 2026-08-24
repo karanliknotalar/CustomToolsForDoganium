@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using CustomToolsForDoganium.Capture;
 using CustomToolsForDoganium.Helper;
 using CustomToolsForDoganium.Hotkeys;
 using CustomToolsForDoganium.Notifications;
@@ -12,11 +13,7 @@ namespace CustomToolsForDoganium.Actions;
 /// <summary>Ctrl+Q: panodaki poliçe/sigortalı bilgisinden tek satırlık özet üretip yapıştırır.</summary>
 internal sealed class SummaryInsertAction : IHotkeyAction
 {
-    private static readonly Regex PolicyLineRegex =
-        new(@"^(Trafik|Kasko|Imm|TSS|Konut|İşyeri)#+", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-    private static readonly Regex PolicyTypeRegex =
-        new(@"^(Trafik|Kasko|Imm|TSS|Konut|İşyeri)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex PolicyLineRegex = new(@"^(\p{L}+)#+", RegexOptions.Compiled);
 
     public Keys VirtualKey => Keys.Q;
     public TargetApp SupportedApps => TargetApp.NotepadPlusPlus | TargetApp.Excel;
@@ -57,9 +54,11 @@ internal sealed class SummaryInsertAction : IHotkeyAction
         var policeLine = lines.FirstOrDefault(l => PolicyLineRegex.IsMatch(l.Trim()));
 
         var sigortali = sigortaliLine.Split([':'], 2)[1].Trim();
+
         var policeTuru = policeLine != null
-            ? PolicyTypeRegex.Match(policeLine.Trim()).Value
+            ? TextExtractionUtils.GetToTitleCase(PolicyLineRegex.Match(policeLine.Trim()).Groups[1].Value)
             : "POLİÇETÜRÜ";
+
         var tarih = DateTime.Now.ToString("dd.MM.yyyy");
 
         if (plakaLine == null)

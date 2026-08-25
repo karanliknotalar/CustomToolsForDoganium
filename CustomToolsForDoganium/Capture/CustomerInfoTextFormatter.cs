@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -17,8 +18,8 @@ internal static class CustomerInfoTextFormatter
 
         var vehicleGroupName =
             TextExtractionUtils.GetVehicleGroupName(TextExtractionUtils.GetBeforeValue(lines, "Kasko Değeri"));
-        var vehicleBrandCode = TextExtractionUtils.GetBeforeValue(lines, "Yakıt Tipi").Split(' ').First();
         var vehicleTypeCode = TextExtractionUtils.GetNextValue(lines, "Tip Kodu").Split(' ').First();
+        var vehicleBrandCode = TextExtractionUtils.GetBeforeValue(lines, "Şasi No", 3).Split(' ').First();
         var vehicleModelYear = TextExtractionUtils.GetNextValue(lines, "Model Yılı");
         var documentSeries = TextExtractionUtils.GetNextValue(lines, "Plaka");
 
